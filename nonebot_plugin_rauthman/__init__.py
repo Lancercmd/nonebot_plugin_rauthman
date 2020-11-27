@@ -2,7 +2,7 @@
 Author       : Lancercmd
 Date         : 2020-10-12 10:20:46
 LastEditors  : Lancercmd
-LastEditTime : 2020-11-17 18:17:11
+LastEditTime : 2020-11-27 17:36:38
 Description  : None
 GitHub       : https://github.com/Lancercmd
 '''
@@ -43,7 +43,7 @@ def loadJson(dir: str, dict: dict = {}) -> dict:
         with open(dir, 'r', encoding='utf-8') as file:
             return json.load(file)
     else:
-        return dict
+        return deepcopy(dict)
 
 
 def updateJson(dir: str, dict: dict) -> dict:
