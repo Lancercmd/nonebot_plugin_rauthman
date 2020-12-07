@@ -1,0 +1,44 @@
+# This is a basic workflow that is manually triggered
+
+name: Windows startup test
+
+# Controls when the action will run. Workflow runs when manually triggered using the UI
+# or API.
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "greet"
+  main:
+    # The type of runner that the job will run on
+    runs-on: windows-latest
+
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+    # Runs a single command using the runners shell
+    - name: Initialize
+      uses: actions/checkout@v2
+    - name: Set up Python 3.9.0
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.9.0
+    - name: Run Powershell
+      run: |
+        powershell
+    - name: Install dependencies
+      run: |
+        pip install poetry
+        poetry install
+    - name: Fetch test environment
+      run: |
+        $client = new-object System.Net.WebClient
+        $client.DownloadFile('https://yuni.lancercmd.cc/statics/actions/.env.prod.example', '.env.prod')
+        $client.DownloadFile('https://yuni.lancercmd.cc/statics/actions/nonebot_plugin_rauthman/windows-startup-test.py', '__init__.py')
+    - name: Run Python
+      run: |
+        poetry run python __init__.py
