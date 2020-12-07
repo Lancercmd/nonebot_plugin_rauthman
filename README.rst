@@ -1,7 +1,7 @@
 nonebot_plugin_rauthman
 ========
 
-- 基于 nonebot / nonebot2 https://github.com/nonebot/nonebot2
+- 基于 `nonebot / nonebot2 <https://github.com/nonebot/nonebot2>`_
 
 功能
 --------
@@ -19,7 +19,7 @@ nonebot_plugin_rauthman
 
   poetry add nonebot-plugin-rauthman
 
-- 通过 pip 从 `PyPI <https://pypi.org/project/nonebot-plugin-rauthman/>`_ 安装
+- 也可以通过 pip 从 `PyPI <https://pypi.org/project/nonebot-plugin-rauthman/>`_ 安装
 
 .. code-block:: bash
 
@@ -27,7 +27,7 @@ nonebot_plugin_rauthman
 
 - 在 nonebot2 项目中设置 load_plugin()
 
-    当使用 nb-cli 添加本插件时，该条会被自动添加
+    当使用 `nb-cli <https://github.com/nonebot/nb-cli>`_ 添加本插件时，该条会被自动添加
 
 .. code-block:: python
 
@@ -44,7 +44,7 @@ nonebot_plugin_rauthman
 
 .. code-block:: bash
 
-  savedata = 'Yuni/savedata'
+  savedata = Yuni/savedata
 
 - 授权管理应用策略（可选）：
 
@@ -66,9 +66,9 @@ nonebot_plugin_rauthman
 
 .. code-block:: bash
 
-  auth_command = 'auth'
-  auth_add = '-a'
-  auth_rm = '-rm'
+  auth_command = auth
+  auth_add = -a
+  auth_rm = -rm
 
 - 为需要管理的 on_* 事件设置规则授权，示例意为将一个 ``on_command`` 事件划入一个名为 ``servicename`` 服务，同时设置服务级别 ``1``
 
@@ -84,8 +84,8 @@ nonebot_plugin_rauthman
 特别感谢
 --------
 
-- Mrs4s / go-cqhttp https://github.com/Mrs4s/go-cqhttp
-- nonebot / nonebot2 https://github.com/nonebot/nonebot2
+- `Mrs4s / go-cqhttp <https://github.com/Mrs4s/go-cqhttp>`_
+- `nonebot / nonebot2 <https://github.com/nonebot/nonebot2>`_
 
 优化建议
 --------
