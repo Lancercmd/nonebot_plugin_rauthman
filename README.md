@@ -2,7 +2,7 @@
  * @Author       : Lancercmd
  * @Date         : 2020-11-17 19:05:26
  * @LastEditors  : Lancercmd
- * @LastEditTime : 2020-12-07 23:53:34
+ * @LastEditTime : 2020-12-15 13:13:52
  * @Description  : None
  * @GitHub       : https://github.com/Lancercmd
 -->
@@ -30,20 +30,20 @@ poetry add nonebot-plugin-rauthman
 pip install nonebot-plugin-rauthman
 ```
 
-- 在 nonebot2 项目中设置 load\_plugin()
+- 在 nonebot2 项目中设置 `nonebot.load_plugin()`
 > 当使用 [nb-cli](https://github.com/nonebot/nb-cli) 添加本插件时，该条会被自动添加
 
 ``` {.sourceCode .python}
 nonebot.load_plugin('nonebot_plugin_rauthman')
 ```
 
-- 参照下文在 nonebot2 项目的环境文件 .env.\* 中添加配置项
+- 参照下文在 nonebot2 项目的环境文件 `.env.*` 中添加配置项
 
 ## 配置项
 
 - 授权管理信息保存位置（必须）：
 
-  ``savedata: str`` 保存相对路径，示例意为保存至运行目录下的 ``'Yuni/savedata'`` 目录
+  `savedata: str` 保存相对路径，示例意为保存至运行目录下的 `Yuni/savedata` 目录
 
 ``` {.sourceCode .bash}
   savedata = Yuni/savedata
@@ -61,11 +61,11 @@ auth_policy = 0
 
 - 授权管理指令所需的参数（可选）：
 
-  `auth_command: str` 指令名，唯一触发用，默认为 `'auth'`
+  `auth_command: str` 指令名，唯一触发用，默认为 `auth`
 
-  `auth_add: str` 启用功能的开关，唯一触发用，默认为 ``'-a'``
+  `auth_add: str` 启用功能的开关，唯一触发用，默认为 `-a`
 
-  `auth_rm: str` 禁用功能的开关，唯一触发用，默认为 ``'-rm'``
+  `auth_rm: str` 禁用功能的开关，唯一触发用，默认为 `-rm`
 
 ``` {.sourceCode .bash}
 auth_command = auth
@@ -73,7 +73,7 @@ auth_add = -a
 auth_rm = -rm
 ```
 
-- 为需要管理的 on\_\* 事件设置规则授权，示例意为将一个 ``on_command`` 事件划入一个名为 ``servicename`` 服务，同时设置服务级别 ``1``
+- 为需要管理的 `on_*` 事件设置规则授权，示例意为将一个 `on_command` 事件划入一个名为 `servicename` 服务，同时设置服务级别 `1`
 
 ``` {.sourceCode .python}
   from nonebot.plugin import on_command
