@@ -2,7 +2,7 @@
 Author       : Lancercmd
 Date         : 2020-10-12 10:20:46
 LastEditors  : Lancercmd
-LastEditTime : 2020-11-27 17:36:38
+LastEditTime : 2020-12-28 11:16:04
 Description  : None
 GitHub       : https://github.com/Lancercmd
 '''
@@ -189,7 +189,7 @@ class auth:
                 await auth.manager.finish(''.join(['已禁用：', ' '.join(services)]))
             except ActionFailed as e:
                 logger.error(f'ActionFailed retcode = {e.retcode}')
-            return
+                return
 
 
 def isInService(service: Optional[str] = None, level: Optional[int] = None) -> Rule:
