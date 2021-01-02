@@ -1,7 +1,7 @@
 [tool.poetry]
 name = "nonebot_plugin_rauthman"
-version = "2.0.0rc1"
-description = ""
+version = "2.0.0-alpha.8"
+description = "Rule-based authorization manager worked with nonebot2"
 authors = ["Lancercmd <lancercmd@gmail.com>"]
 license = "GPLv3"
 readme = "README.md"
@@ -9,7 +9,7 @@ repository = "https://github.com/Lancercmd/nonebot_plugin_rauthman"
 
 [tool.poetry.dependencies]
 python = "^3.8"
-nonebot2 = "^2.0.0-alpha.7"
+nonebot2 = "^2.0.0-alpha.8"
 ujson = "^4.0.1"
 
 [tool.poetry.dev-dependencies]

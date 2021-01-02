@@ -14,10 +14,10 @@ jobs:
     steps:
     - name: Initialize
       uses: actions/checkout@v2
-    - name: Set up Python 3.9.0
+    - name: Set up Python 3.9.1
       uses: actions/setup-python@v2
       with:
-        python-version: 3.9.0
+        python-version: 3.9.1
     - name: Run Powershell
       run: |
         powershell
@@ -34,14 +34,15 @@ jobs:
         path: |
           C:\Users\runneradmin\AppData\Local\pypoetry
         key: |
-          Yuni-v2.0.0a7
+          Yuni-v2.0.0a8.post2
         restore-keys: |
-          Yuni-v2.0.0a7
+          Yuni-v2.0.0a8.post2
     - name: Install dependencies
       if: |
         steps.poetry-cache.outputs.cache-hit != 'true'
       run: |
         poetry install
+        python -m pip install --upgrade nonebot2
     - name: Fetch test environment
       run: |
         $client = new-object System.Net.WebClient

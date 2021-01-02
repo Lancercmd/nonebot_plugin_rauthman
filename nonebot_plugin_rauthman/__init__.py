@@ -2,7 +2,7 @@
 Author       : Lancercmd
 Date         : 2020-10-12 10:20:46
 LastEditors  : Lancercmd
-LastEditTime : 2020-12-28 11:16:04
+LastEditTime : 2021-01-02 18:40:00
 Description  : None
 GitHub       : https://github.com/Lancercmd
 '''
@@ -14,11 +14,13 @@ from typing import Optional
 
 import nonebot
 from loguru import logger
-from nonebot.adapters.cqhttp import Bot, Event
+from nonebot.adapters import Bot, Event
+from nonebot.adapters.cqhttp.event import GroupMessageEvent, MessageEvent
 from nonebot.exception import ActionFailed
 from nonebot.permission import SUPERUSER
 from nonebot.plugin import on_command
 from nonebot.rule import Rule
+from nonebot.typing import T_State
 
 try:
     import ujson as json
@@ -115,93 +117,108 @@ class auth:
         return data[f'{group_id}']['level']
 
     @manager.handle()
-    async def _(bot: Bot, event: Event, state: dict):
-        if event.group_id:
-            state['group_id'] = f'{event.group_id}'
-            if event.plain_text:
-                state['services'] = f'{event.plain_text}'
+    async def _(bot: Bot, event: Event, state: T_State):
+        if isinstance(event, GroupMessageEvent):
+            if event.group_id:
+                state['group_id'] = f'{event.group_id}'
+                if event.get_plaintext():
+                    state['services'] = event.get_plaintext()
+        else:
+            logger.warning('Not supported: rauthman')
+            return
 
     @manager.got('group_id', prompt='请输入需要调整权限的群号，并用空格隔开~')
-    async def _(bot: Bot, event: Event, state: dict):
-        input = state['group_id'].split(' ')
-        group_ids = []
-        for i in input:
-            if i.isnumeric():
-                if not i in group_ids and i != '1':
-                    group_ids.append(int(i))
+    async def _(bot: Bot, event: Event, state: T_State):
+        if isinstance(event, MessageEvent):
+            input = state['group_id'].split(' ')
+            group_ids = []
+            for i in input:
+                if i.isnumeric():
+                    if not i in group_ids and i != '1':
+                        group_ids.append(int(i))
+                    else:
+                        try:
+                            await auth.manager.finish('请不要用此方式进行全局设置哦~')
+                        except ActionFailed as e:
+                            logger.error(f'ActionFailed retcode = {e.retcode}')
+                            return
                 else:
                     try:
-                        await auth.manager.finish('请不要用此方式进行全局设置哦~')
+                        await auth.manager.finish('Invalid input')
                     except ActionFailed as e:
                         logger.error(f'ActionFailed retcode = {e.retcode}')
                         return
+            if group_ids:
+                state['group_ids'] = group_ids
             else:
                 try:
                     await auth.manager.finish('Invalid input')
                 except ActionFailed as e:
                     logger.error(f'ActionFailed retcode = {e.retcode}')
                     return
-        if group_ids:
-            state['group_ids'] = group_ids
         else:
-            try:
-                await auth.manager.finish('Invalid input')
-            except ActionFailed as e:
-                logger.error(f'ActionFailed retcode = {e.retcode}')
-                return
+            logger.warning('Not supported: rauthman')
+            return
 
     @manager.got('services', prompt='请输入调整后的群级别，或 启用 / 禁用 的功能~')
-    async def _(bot: Bot, event: Event, state: dict):
-        services = state['services'].split(' ')
-        if len(services) == 1:
-            if services[0].isnumeric():
-                segments = []
+    async def _(bot: Bot, event: Event, state: T_State):
+        if isinstance(event, MessageEvent):
+            services = state['services'].split(' ')
+            if len(services) == 1:
+                if services[0].isnumeric():
+                    segments = []
+                    for group_id in state['group_ids']:
+                        prev = auth.check(group_id)
+                        auth.set(group_id, level=int(services[0]))
+                        if len(state['group_ids']) == 1:
+                            segments.append(
+                                f'群 Level {prev} => {event.get_plaintext()}'
+                            )
+                        else:
+                            segments.append(
+                                f'群 {group_id} Level {prev} => {event.get_plaintext()}'
+                            )
+                    try:
+                        await auth.manager.finish('\n'.join(segments))
+                    except ActionFailed as e:
+                        logger.error(f'ActionFailed retcode = {e.retcode}')
+                        return
+            elif services[0] == auth.options.add:
                 for group_id in state['group_ids']:
-                    prev = auth.check(group_id)
-                    auth.set(group_id, level=int(services[0]))
-                    if len(state['group_ids']) == 1:
-                        segments.append(
-                            f'群 Level {prev} => {event.plain_text}'
-                        )
-                    else:
-                        segments.append(
-                            f'群 {group_id} Level {prev} => {event.plain_text}'
-                        )
+                    auth.set(group_id, services)
+                services.remove(auth.options.add)
                 try:
-                    await auth.manager.finish('\n'.join(segments))
+                    await auth.manager.finish(''.join(['已启用：', ' '.join(services)]))
                 except ActionFailed as e:
                     logger.error(f'ActionFailed retcode = {e.retcode}')
                     return
-        elif services[0] == auth.options.add:
-            for group_id in state['group_ids']:
-                auth.set(group_id, services)
-            services.remove(auth.options.add)
-            try:
-                await auth.manager.finish(''.join(['已启用：', ' '.join(services)]))
-            except ActionFailed as e:
-                logger.error(f'ActionFailed retcode = {e.retcode}')
-                return
-        elif services[0] == auth.options.rm:
-            for group_id in state['group_ids']:
-                auth.set(group_id, services)
-            services.remove(auth.options.rm)
-            try:
-                await auth.manager.finish(''.join(['已禁用：', ' '.join(services)]))
-            except ActionFailed as e:
-                logger.error(f'ActionFailed retcode = {e.retcode}')
-                return
+            elif services[0] == auth.options.rm:
+                for group_id in state['group_ids']:
+                    auth.set(group_id, services)
+                services.remove(auth.options.rm)
+                try:
+                    await auth.manager.finish(''.join(['已禁用：', ' '.join(services)]))
+                except ActionFailed as e:
+                    logger.error(f'ActionFailed retcode = {e.retcode}')
+                    return
+        else:
+            logger.warning('Not supported: rauthman')
+            return
 
 
 def isInService(service: Optional[str] = None, level: Optional[int] = None) -> Rule:
     _service = service
     _level = level
 
-    async def _isInService(bot: Bot, event: Event, state: dict) -> bool:
-        if event.group_id:
-            if _service and auth.policy == 0:
-                return auth.check(event.group_id, _service)
-            elif _level and auth.policy == 1:
-                return bool(auth.check(event.group_id) >= _level)
+    async def _isInService(bot: Bot, event: Event, state: T_State) -> bool:
+        if isinstance(event, MessageEvent):
+            if isinstance(event, GroupMessageEvent):
+                if _service and auth.policy == 0:
+                    return auth.check(event.group_id, _service)
+                elif _level and auth.policy == 1:
+                    return bool(auth.check(event.group_id) >= _level)
+            else:
+                return True
         else:
-            return True
+            return False
     return Rule(_isInService)
