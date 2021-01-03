@@ -2,7 +2,7 @@
 Author       : Lancercmd
 Date         : 2020-10-12 10:20:46
 LastEditors  : Lancercmd
-LastEditTime : 2021-01-03 14:16:24
+LastEditTime : 2021-01-04 00:31:28
 Description  : None
 GitHub       : https://github.com/Lancercmd
 '''
@@ -36,8 +36,11 @@ def checkDir(dir: str):
 
 
 def dumpJson(dir: str, dict: dict):
+    _dict = {}
+    for i in sorted(list(dict.keys())):
+        _dict[i] = dict[i]
     with open(dir, 'w', encoding='utf-8') as file:
-        json.dump(dict, file, ensure_ascii=False, indent=4)
+        json.dump(_dict, file, ensure_ascii=False, indent=4)
 
 
 def loadJson(dir: str, dict: dict = {}) -> dict:
@@ -76,11 +79,8 @@ class auth:
         data = loadJson(auth.authData)
         if not f'{group_id}' in data:
             data[f'{group_id}'] = {}
-            latest = {}
-            for i in sorted(data.keys()):
-                latest[i] = data[i]
             checkDir(path.dirname(auth.authData))
-            data = updateJson(auth.authData, latest)
+            data = updateJson(auth.authData, data)
         if services:
             cache = deepcopy(services)
             if not 'enabled' in data[f'{group_id}']:
@@ -98,11 +98,8 @@ class auth:
             data[f'{group_id}']['enabled'].sort()
         else:
             data[f'{group_id}']['level'] = level
-        latest = {}
-        for i in sorted(data.keys()):
-            latest[i] = data[i]
         checkDir(getSave())
-        dumpJson(auth.authData, latest)
+        dumpJson(auth.authData, data)
 
     def check(group_id: int, service: Optional[str] = None) -> int:
         data = loadJson(auth.authData)
@@ -141,13 +138,17 @@ class auth:
                         try:
                             await auth.manager.finish('请不要用此方式进行全局设置哦~')
                         except ActionFailed as e:
-                            logger.error(f'ActionFailed retcode = {e.retcode}')
+                            logger.error(
+                                f'ActionFailed | {e.info["msg"].lower()} | retcode = {e.info["retcode"]} | {e.info["wording"]}'
+                            )
                             return
                 else:
                     try:
                         await auth.manager.finish('Invalid input')
                     except ActionFailed as e:
-                        logger.error(f'ActionFailed retcode = {e.retcode}')
+                        logger.error(
+                            f'ActionFailed | {e.info["msg"].lower()} | retcode = {e.info["retcode"]} | {e.info["wording"]}'
+                        )
                         return
             if group_ids:
                 state['group_ids'] = group_ids
@@ -155,7 +156,9 @@ class auth:
                 try:
                     await auth.manager.finish('Invalid input')
                 except ActionFailed as e:
-                    logger.error(f'ActionFailed retcode = {e.retcode}')
+                    logger.error(
+                        f'ActionFailed | {e.info["msg"].lower()} | retcode = {e.info["retcode"]} | {e.info["wording"]}'
+                    )
                     return
         else:
             logger.warning('Not supported: rauthman')
@@ -182,7 +185,9 @@ class auth:
                     try:
                         await auth.manager.finish('\n'.join(segments))
                     except ActionFailed as e:
-                        logger.error(f'ActionFailed retcode = {e.retcode}')
+                        logger.error(
+                            f'ActionFailed | {e.info["msg"].lower()} | retcode = {e.info["retcode"]} | {e.info["wording"]}'
+                        )
                         return
             elif services[0] == auth.options.add:
                 for group_id in state['group_ids']:
@@ -191,7 +196,9 @@ class auth:
                 try:
                     await auth.manager.finish(''.join(['已启用：', ' '.join(services)]))
                 except ActionFailed as e:
-                    logger.error(f'ActionFailed retcode = {e.retcode}')
+                    logger.error(
+                        f'ActionFailed | {e.info["msg"].lower()} | retcode = {e.info["retcode"]} | {e.info["wording"]}'
+                    )
                     return
             elif services[0] == auth.options.rm:
                 for group_id in state['group_ids']:
@@ -200,7 +207,9 @@ class auth:
                 try:
                     await auth.manager.finish(''.join(['已禁用：', ' '.join(services)]))
                 except ActionFailed as e:
-                    logger.error(f'ActionFailed retcode = {e.retcode}')
+                    logger.error(
+                        f'ActionFailed | {e.info["msg"].lower()} | retcode = {e.info["retcode"]} | {e.info["wording"]}'
+                    )
                     return
         else:
             logger.warning('Not supported: rauthman')
