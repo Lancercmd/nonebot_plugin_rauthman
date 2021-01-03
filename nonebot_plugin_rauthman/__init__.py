@@ -2,7 +2,7 @@
 Author       : Lancercmd
 Date         : 2020-10-12 10:20:46
 LastEditors  : Lancercmd
-LastEditTime : 2021-01-02 18:40:00
+LastEditTime : 2021-01-03 14:16:24
 Description  : None
 GitHub       : https://github.com/Lancercmd
 '''
@@ -118,11 +118,12 @@ class auth:
 
     @manager.handle()
     async def _(bot: Bot, event: Event, state: T_State):
-        if isinstance(event, GroupMessageEvent):
-            if event.group_id:
-                state['group_id'] = f'{event.group_id}'
-                if event.get_plaintext():
-                    state['services'] = event.get_plaintext()
+        if isinstance(event, MessageEvent):
+            if isinstance(event, GroupMessageEvent):
+                if event.group_id:
+                    state['group_id'] = f'{event.group_id}'
+                    if event.get_plaintext():
+                        state['services'] = event.get_plaintext()
         else:
             logger.warning('Not supported: rauthman')
             return
