@@ -2,7 +2,7 @@
 Author       : Lancercmd
 Date         : 2020-10-12 10:20:46
 LastEditors  : Lancercmd
-LastEditTime : 2021-01-04 14:34:28
+LastEditTime : 2021-01-04 15:25:25
 Description  : None
 GitHub       : https://github.com/Lancercmd
 '''
@@ -284,8 +284,11 @@ class auth:
             return
 
 
+warning = False
+
+
 def isInService(service: Optional[str] = None, level: Optional[int] = None) -> Rule:
-    warning = False
+    global warning
     if service and not service in available:
         if ' ' in service and not warning:
             logger.warning('At least 1 space found in the service name')
