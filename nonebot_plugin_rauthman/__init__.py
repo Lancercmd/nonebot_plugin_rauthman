@@ -2,7 +2,7 @@
 Author       : Lancercmd
 Date         : 2020-10-12 10:20:46
 LastEditors  : Lancercmd
-LastEditTime : 2021-01-04 15:25:25
+LastEditTime : 2021-01-04 17:05:52
 Description  : None
 GitHub       : https://github.com/Lancercmd
 '''
@@ -15,7 +15,9 @@ from typing import Optional
 import nonebot
 from loguru import logger
 from nonebot.adapters import Bot, Event
-from nonebot.adapters.cqhttp.event import GroupMessageEvent, MessageEvent
+from nonebot.adapters.cqhttp.event import (GroupMessageEvent, MessageEvent,
+                                           MetaEvent, NoticeEvent,
+                                           RequestEvent)
 from nonebot.exception import ActionFailed
 from nonebot.permission import SUPERUSER
 from nonebot.plugin import on_command
@@ -302,6 +304,27 @@ def isInService(service: Optional[str] = None, level: Optional[int] = None) -> R
                     return auth.check(event.group_id, service)
                 elif level and auth.policy == 1:
                     return bool(auth.check(event.group_id) >= level)
+            else:
+                return True
+        elif isinstance(event, NoticeEvent):
+            if service and auth.policy == 0:
+                return auth.check(event.group_id, service)
+            elif level and auth.policy == 1:
+                return bool(auth.check(event.group_id) >= level)
+            else:
+                return True
+        elif isinstance(event, RequestEvent):
+            if service and auth.policy == 0:
+                return auth.check(event.group_id, service)
+            elif level and auth.policy == 1:
+                return bool(auth.check(event.group_id) >= level)
+            else:
+                return True
+        elif isinstance(event, MetaEvent):
+            if service and auth.policy == 0:
+                return auth.check(event.group_id, service)
+            elif level and auth.policy == 1:
+                return bool(auth.check(event.group_id) >= level)
             else:
                 return True
         else:
