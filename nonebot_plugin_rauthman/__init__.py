@@ -2,7 +2,7 @@
 Author       : Lancercmd
 Date         : 2020-10-12 10:20:46
 LastEditors  : Lancercmd
-LastEditTime : 2021-01-04 00:31:28
+LastEditTime : 2021-01-04 14:34:28
 Description  : None
 GitHub       : https://github.com/Lancercmd
 '''
@@ -51,11 +51,6 @@ def loadJson(dir: str, dict: dict = {}) -> dict:
         return deepcopy(dict)
 
 
-def updateJson(dir: str, dict: dict) -> dict:
-    dumpJson(dir, dict)
-    return loadJson(dir)
-
-
 def getSave(id: int = None, flag: int = 0) -> str:
     if not id:
         return path.join(sys.path[0], config.savedata)
@@ -73,14 +68,14 @@ class auth:
         command = 'auth' if not config.auth_command else config.auth_command
         add = '-a' if not config.auth_add else config.auth_add
         rm = '-rm' if not config.auth_rm else config.auth_rm
+        show = '-s' if not config.auth_show else config.auth_show
+        available = '-av' if not config.auth_available else config.auth_available
     manager = on_command(options.command, permission=SUPERUSER, block=True)
 
     def set(group_id: int, services: Optional[list] = None, level: Optional[int] = None):
         data = loadJson(auth.authData)
         if not f'{group_id}' in data:
             data[f'{group_id}'] = {}
-            checkDir(path.dirname(auth.authData))
-            data = updateJson(auth.authData, data)
         if services:
             cache = deepcopy(services)
             if not 'enabled' in data[f'{group_id}']:
@@ -111,7 +106,18 @@ class auth:
             return bool(service in data[f'{group_id}']['enabled'])
         if not f'{group_id}' in data:
             return 0
+        elif not 'level' in data[f'{group_id}']:
+            return 0
         return data[f'{group_id}']['level']
+
+    def show(group_id: int) -> Optional[dict]:
+        data = loadJson(auth.authData)
+        if not f'{group_id}' in data:
+            return None
+        status = {}
+        for i in list(data[f'{group_id}'].keys()):
+            status[i] = deepcopy(data[f'{group_id}'][i])
+        return status if status else None
 
     @manager.handle()
     async def _(bot: Bot, event: Event, state: T_State):
@@ -189,12 +195,63 @@ class auth:
                             f'ActionFailed | {e.info["msg"].lower()} | retcode = {e.info["retcode"]} | {e.info["wording"]}'
                         )
                         return
+                elif services[0] == auth.options.show:
+                    queue = []
+                    for group_id in state['group_ids']:
+                        status = auth.show(group_id)
+                        if status:
+                            keys = list(status.keys())
+                            layout = []
+                            _status = []
+                            for i in keys:
+                                if isinstance(status[i], list):
+                                    _status.append(
+                                        ' '.join(status[i]).replace(',', '')
+                                    )
+                                else:
+                                    _status.append(status[i])
+                            for i in range(len(keys)):
+                                if keys[i] == 'enabled':
+                                    layout.append(f'当前启用：{_status[i]}')
+                                elif keys[i] == 'level':
+                                    layout.append(f'功能级别：{_status[i]}')
+                                else:
+                                    layout.append(f'{keys[i]}: {_status[i]}')
+                            queue.append(f'{group_id} ' + ' | '.join(layout))
+                        if len(queue) > 9:
+                            break
+                    try:
+                        await auth.manager.finish('\n'.join(queue))
+                    except ActionFailed as e:
+                        logger.error(
+                            f'ActionFailed | {e.info["msg"].lower()} | retcode = {e.info["retcode"]} | {e.info["wording"]}'
+                        )
+                        return
+                elif services[0] == auth.options.available:
+                    try:
+                        await auth.manager.finish(''.join(['全局可用：', ' '.join(available)]))
+                    except ActionFailed as e:
+                        logger.error(
+                            f'ActionFailed | {e.info["msg"].lower()} | retcode = {e.info["retcode"]} | {e.info["wording"]}'
+                        )
+                        return
             elif services[0] == auth.options.add:
                 for group_id in state['group_ids']:
                     auth.set(group_id, services)
                 services.remove(auth.options.add)
+                invalid = []
+                for i in services:
+                    if not i in available:
+                        invalid.append(i)
+                for i in invalid:
+                    services.remove(i)
+                message = []
+                if services:
+                    message.append(f'已启用：{" ".join(services)}')
+                if invalid:
+                    message.append(f'未找到：{" ".join(invalid)}')
                 try:
-                    await auth.manager.finish(''.join(['已启用：', ' '.join(services)]))
+                    await auth.manager.finish('\n'.join(message))
                 except ActionFailed as e:
                     logger.error(
                         f'ActionFailed | {e.info["msg"].lower()} | retcode = {e.info["retcode"]} | {e.info["wording"]}'
@@ -204,8 +261,19 @@ class auth:
                 for group_id in state['group_ids']:
                     auth.set(group_id, services)
                 services.remove(auth.options.rm)
+                invalid = []
+                for i in services:
+                    if not i in available:
+                        invalid.append(i)
+                for i in invalid:
+                    services.remove(i)
+                message = []
+                if services:
+                    message.append(f'已禁用：{" ".join(services)}')
+                if invalid:
+                    message.append(f'未找到：{" ".join(invalid)}')
                 try:
-                    await auth.manager.finish(''.join(['已禁用：', ' '.join(services)]))
+                    await auth.manager.finish('\n'.join(message))
                 except ActionFailed as e:
                     logger.error(
                         f'ActionFailed | {e.info["msg"].lower()} | retcode = {e.info["retcode"]} | {e.info["wording"]}'
@@ -217,18 +285,25 @@ class auth:
 
 
 def isInService(service: Optional[str] = None, level: Optional[int] = None) -> Rule:
-    _service = service
-    _level = level
+    warning = False
+    if service and not service in available:
+        if ' ' in service and not warning:
+            logger.warning('At least 1 space found in the service name')
+            warning = True
+        available.append(service)
 
     async def _isInService(bot: Bot, event: Event, state: T_State) -> bool:
         if isinstance(event, MessageEvent):
             if isinstance(event, GroupMessageEvent):
-                if _service and auth.policy == 0:
-                    return auth.check(event.group_id, _service)
-                elif _level and auth.policy == 1:
-                    return bool(auth.check(event.group_id) >= _level)
+                if service and auth.policy == 0:
+                    return auth.check(event.group_id, service)
+                elif level and auth.policy == 1:
+                    return bool(auth.check(event.group_id) >= level)
             else:
                 return True
         else:
             return False
     return Rule(_isInService)
+
+
+available = []
