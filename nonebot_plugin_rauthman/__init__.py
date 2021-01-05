@@ -2,7 +2,7 @@
 Author       : Lancercmd
 Date         : 2020-10-12 10:20:46
 LastEditors  : Lancercmd
-LastEditTime : 2021-01-04 17:05:52
+LastEditTime : 2021-01-05 10:19:22
 Description  : None
 GitHub       : https://github.com/Lancercmd
 '''
@@ -130,7 +130,7 @@ class auth:
                     if event.get_plaintext():
                         state['services'] = event.get_plaintext()
         else:
-            logger.warning('Not supported: rauthman')
+            logger.warning('Not supported: nonebot_plugin_rauthman')
             return
 
     @manager.got('group_id', prompt='请输入需要调整权限的群号，并用空格隔开~')
@@ -169,7 +169,7 @@ class auth:
                     )
                     return
         else:
-            logger.warning('Not supported: rauthman')
+            logger.warning('Not supported: nonebot_plugin_rauthman')
             return
 
     @manager.got('services', prompt='请输入调整后的群级别，或 启用 / 禁用 的功能~')
@@ -282,7 +282,7 @@ class auth:
                     )
                     return
         else:
-            logger.warning('Not supported: rauthman')
+            logger.warning('Not supported: nonebot_plugin_rauthman')
             return
 
 
@@ -311,24 +311,19 @@ def isInService(service: Optional[str] = None, level: Optional[int] = None) -> R
                 return auth.check(event.group_id, service)
             elif level and auth.policy == 1:
                 return bool(auth.check(event.group_id) >= level)
-            else:
-                return True
         elif isinstance(event, RequestEvent):
             if service and auth.policy == 0:
                 return auth.check(event.group_id, service)
             elif level and auth.policy == 1:
                 return bool(auth.check(event.group_id) >= level)
-            else:
-                return True
         elif isinstance(event, MetaEvent):
             if service and auth.policy == 0:
                 return auth.check(event.group_id, service)
             elif level and auth.policy == 1:
                 return bool(auth.check(event.group_id) >= level)
-            else:
-                return True
         else:
-            return False
+            logger.warning('Not supported: nonebot_plugin_rauthman')
+            return True
     return Rule(_isInService)
 
 
