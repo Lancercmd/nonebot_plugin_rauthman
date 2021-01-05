@@ -2,7 +2,7 @@
 Author       : Lancercmd
 Date         : 2020-10-12 10:20:46
 LastEditors  : Lancercmd
-LastEditTime : 2021-01-05 10:19:22
+LastEditTime : 2021-01-05 14:00:00
 Description  : None
 GitHub       : https://github.com/Lancercmd
 '''
@@ -139,7 +139,7 @@ class auth:
             input = state['group_id'].split(' ')
             group_ids = []
             for i in input:
-                if i.isnumeric():
+                if i.isdigit():
                     if not i in group_ids and i != '1':
                         group_ids.append(int(i))
                     else:
@@ -177,7 +177,15 @@ class auth:
         if isinstance(event, MessageEvent):
             services = state['services'].split(' ')
             if len(services) == 1:
-                if services[0].isnumeric():
+                if services[0].isdigit():
+                    if int(services[0]) > 99999999999999999999:
+                        try:
+                            await auth.manager.finish(f'Level too large: {services[0]}')
+                        except ActionFailed as e:
+                            logger.error(
+                                f'ActionFailed | {e.info["msg"].lower()} | retcode = {e.info["retcode"]} | {e.info["wording"]}'
+                            )
+                            return
                     segments = []
                     for group_id in state['group_ids']:
                         prev = auth.check(group_id)
