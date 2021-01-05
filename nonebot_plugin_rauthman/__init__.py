@@ -2,7 +2,7 @@
 Author       : Lancercmd
 Date         : 2020-10-12 10:20:46
 LastEditors  : Lancercmd
-LastEditTime : 2021-01-05 14:00:00
+LastEditTime : 2021-01-06 02:25:55
 Description  : None
 GitHub       : https://github.com/Lancercmd
 '''
@@ -17,7 +17,7 @@ from loguru import logger
 from nonebot.adapters import Bot, Event
 from nonebot.adapters.cqhttp.event import (GroupMessageEvent, MessageEvent,
                                            MetaEvent, NoticeEvent,
-                                           RequestEvent)
+                                           PrivateMessageEvent, RequestEvent)
 from nonebot.exception import ActionFailed
 from nonebot.permission import SUPERUSER
 from nonebot.plugin import on_command
@@ -85,12 +85,12 @@ class auth:
             if cache[0] == auth.options.add:
                 cache.remove(auth.options.add)
                 for service in cache:
-                    if not service in data[f'{group_id}']['enabled']:
+                    if service in available and not service in data[f'{group_id}']['enabled']:
                         data[f'{group_id}']['enabled'].append(service)
             elif cache[0] == auth.options.rm:
                 cache.remove(auth.options.rm)
                 for service in cache:
-                    if service in data[f'{group_id}']['enabled']:
+                    if service in available and service in data[f'{group_id}']['enabled']:
                         data[f'{group_id}']['enabled'].remove(service)
             data[f'{group_id}']['enabled'].sort()
         else:
@@ -129,11 +129,27 @@ class auth:
                     state['group_id'] = f'{event.group_id}'
                     if event.get_plaintext():
                         state['services'] = event.get_plaintext()
+            elif isinstance(event, PrivateMessageEvent):
+                actions = event.get_plaintext().split(' ', 1)
+                if len(actions) == 1:
+                    if actions[0] == auth.options.available:
+                        state['group_id'] = '0'
+                        state['services'] = auth.options.available
+                    elif actions[0] == auth.options.show:
+                        state['services'] = auth.options.show
+                elif actions[0] == auth.options.show:
+                    if actions[1].isdigit():
+                        state['group_id'] = actions[1]
+                    state['services'] = auth.options.show
+            state['add'] = auth.options.add
+            state['rm'] = auth.options.rm
+            state['show'] = auth.options.show
+            state['available'] = auth.options.available
         else:
-            logger.warning('Not supported: nonebot_plugin_rauthman')
+            logger.warning('Not supported: manager')
             return
 
-    @manager.got('group_id', prompt='请输入需要调整权限的群号，并用空格隔开~')
+    @manager.got('group_id', prompt='请输入需要操作的群号，并用空格隔开~')
     async def _(bot: Bot, event: Event, state: T_State):
         if isinstance(event, MessageEvent):
             input = state['group_id'].split(' ')
@@ -169,10 +185,10 @@ class auth:
                     )
                     return
         else:
-            logger.warning('Not supported: nonebot_plugin_rauthman')
+            logger.warning('Not supported: manager')
             return
 
-    @manager.got('services', prompt='请输入调整后的群级别，或 启用 / 禁用 的功能~')
+    @manager.got('services', prompt='请继续输入——\n{add} sv1 sv2 ... | 启用功能\n{rm} sv1 sv2 ... | 禁用功能\n{show} | 查看群功能状态\n{available} | 展示全局可用功能\n※ 设置群级别请直接发送数字')
     async def _(bot: Bot, event: Event, state: T_State):
         if isinstance(event, MessageEvent):
             services = state['services'].split(' ')
@@ -222,12 +238,17 @@ class auth:
                                     _status.append(status[i])
                             for i in range(len(keys)):
                                 if keys[i] == 'enabled':
-                                    layout.append(f'当前启用：{_status[i]}')
+                                    if _status:
+                                        layout.append(f'当前启用：{_status[i]}')
+                                    else:
+                                        layout.append(f'当前启用：无')
                                 elif keys[i] == 'level':
                                     layout.append(f'功能级别：{_status[i]}')
                                 else:
                                     layout.append(f'{keys[i]}: {_status[i]}')
                             queue.append(f'{group_id} ' + ' | '.join(layout))
+                        else:
+                            queue.append(f'{group_id} ' + '群聊未注册')
                         if len(queue) > 9:
                             break
                     try:
@@ -240,6 +261,14 @@ class auth:
                 elif services[0] == auth.options.available:
                     try:
                         await auth.manager.finish(''.join(['全局可用：', ' '.join(available)]))
+                    except ActionFailed as e:
+                        logger.error(
+                            f'ActionFailed | {e.info["msg"].lower()} | retcode = {e.info["retcode"]} | {e.info["wording"]}'
+                        )
+                        return
+                else:
+                    try:
+                        await auth.manager.finish('Invalid input')
                     except ActionFailed as e:
                         logger.error(
                             f'ActionFailed | {e.info["msg"].lower()} | retcode = {e.info["retcode"]} | {e.info["wording"]}'
