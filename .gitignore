@@ -139,3 +139,4 @@ tests/
 
 # VSCode
 .vscode/
+*.bak

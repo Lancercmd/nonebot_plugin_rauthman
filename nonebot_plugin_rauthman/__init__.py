@@ -2,14 +2,15 @@
 Author       : Lancercmd
 Date         : 2020-10-12 10:20:46
 LastEditors  : Lancercmd
-LastEditTime : 2021-01-06 02:25:55
+LastEditTime : 2021-01-06 14:33:21
 Description  : None
 GitHub       : https://github.com/Lancercmd
 '''
 import os
 import sys
 from copy import deepcopy
-from os import path
+from os import path, rename
+from time import time
 from typing import Optional
 
 import nonebot
@@ -65,6 +66,32 @@ def getSave(id: int = None, flag: int = 0) -> str:
 class auth:
     authData = path.join(getSave(), 'auth.json')
     policy = 0 if not config.auth_policy else config.auth_policy
+    template = {
+        'group': {},
+        'private': {}
+    }
+    data = loadJson(authData, template)
+    valid = True
+    latest = False
+    for i in list(data.keys()):
+        if not i.isdigit():
+            if i in list(template.keys()):
+                latest = True
+            else:
+                valid = False
+    if valid and not latest:
+        new = deepcopy(template)
+        for i in list(data.keys()):
+            new['group'][i] = data[i]
+        checkDir(getSave())
+        dumpJson(f'{authData[:-5]}-{int(time())}.json.bak', data)
+        dumpJson(authData, new)
+        logger.success('Authorization manager database was updated')
+    elif not latest:
+        bak = f'{authData[:-5]}-{int(time())}.json.bak'
+        rename(authData, bak)
+        logger.warning('Authorization manager database cannot be updated, saving old database to {bak}')
+        logger.warning('You may read the source code to update your database manually')
 
     class options:
         command = 'auth' if not config.auth_command else config.auth_command
@@ -146,7 +173,7 @@ class auth:
             state['show'] = auth.options.show
             state['available'] = auth.options.available
         else:
-            logger.warning('Not supported: manager')
+            logger.warning('Not supported: nonebot_plugin_rauthman')
             return
 
     @manager.got('group_id', prompt='请输入需要操作的群号，并用空格隔开~')
@@ -185,7 +212,7 @@ class auth:
                     )
                     return
         else:
-            logger.warning('Not supported: manager')
+            logger.warning('Not supported: nonebot_plugin_rauthman')
             return
 
     @manager.got('services', prompt='请继续输入——\n{add} sv1 sv2 ... | 启用功能\n{rm} sv1 sv2 ... | 禁用功能\n{show} | 查看群功能状态\n{available} | 展示全局可用功能\n※ 设置群级别请直接发送数字')
