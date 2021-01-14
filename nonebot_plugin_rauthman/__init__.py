@@ -2,7 +2,7 @@
 Author       : Lancercmd
 Date         : 2020-10-12 10:20:46
 LastEditors  : Lancercmd
-LastEditTime : 2021-01-06 14:33:21
+LastEditTime : 2021-01-14 11:42:07
 Description  : None
 GitHub       : https://github.com/Lancercmd
 '''
@@ -16,7 +16,10 @@ from typing import Optional
 import nonebot
 from loguru import logger
 from nonebot.adapters import Bot, Event
-from nonebot.adapters.cqhttp.event import (GroupMessageEvent, MessageEvent,
+from nonebot.adapters.cqhttp.event import (FriendAddNoticeEvent,
+                                           FriendRecallNoticeEvent,
+                                           FriendRequestEvent,
+                                           GroupMessageEvent, MessageEvent,
                                            MetaEvent, NoticeEvent,
                                            PrivateMessageEvent, RequestEvent)
 from nonebot.exception import ActionFailed
@@ -73,15 +76,15 @@ class auth:
     data = loadJson(authData, template)
     valid = True
     latest = False
-    for i in list(data.keys()):
+    for i in data:
         if not i.isdigit():
-            if i in list(template.keys()):
+            if i in template:
                 latest = True
             else:
                 valid = False
     if valid and not latest:
         new = deepcopy(template)
-        for i in list(data.keys()):
+        for i in data:
             new['group'][i] = data[i]
         checkDir(getSave())
         dumpJson(f'{authData[:-5]}-{int(time())}.json.bak', data)
@@ -90,8 +93,12 @@ class auth:
     elif not latest:
         bak = f'{authData[:-5]}-{int(time())}.json.bak'
         rename(authData, bak)
-        logger.warning('Authorization manager database cannot be updated, saving old database to {bak}')
-        logger.warning('You may read the source code to update your database manually')
+        logger.warning(
+            f'Authorization manager database cannot be updated, saving old database to {bak}'
+        )
+        logger.warning(
+            'You may read the source code to update your database manually'
+        )
 
     class options:
         command = 'auth' if not config.auth_command else config.auth_command
@@ -102,50 +109,50 @@ class auth:
     manager = on_command(options.command, permission=SUPERUSER, block=True)
 
     def set(group_id: int, services: Optional[list] = None, level: Optional[int] = None):
-        data = loadJson(auth.authData)
-        if not f'{group_id}' in data:
-            data[f'{group_id}'] = {}
+        data = loadJson(auth.authData, auth.template)
+        if not f'{group_id}' in data['group']:
+            data['group'][f'{group_id}'] = {}
         if services:
             cache = deepcopy(services)
-            if not 'enabled' in data[f'{group_id}']:
-                data[f'{group_id}']['enabled'] = []
+            if not 'enabled' in data['group'][f'{group_id}']:
+                data['group'][f'{group_id}']['enabled'] = []
             if cache[0] == auth.options.add:
                 cache.remove(auth.options.add)
                 for service in cache:
-                    if service in available and not service in data[f'{group_id}']['enabled']:
-                        data[f'{group_id}']['enabled'].append(service)
+                    if service in available and not service in data['group'][f'{group_id}']['enabled']:
+                        data['group'][f'{group_id}']['enabled'].append(service)
             elif cache[0] == auth.options.rm:
                 cache.remove(auth.options.rm)
                 for service in cache:
-                    if service in available and service in data[f'{group_id}']['enabled']:
-                        data[f'{group_id}']['enabled'].remove(service)
-            data[f'{group_id}']['enabled'].sort()
+                    if service in available and service in data['group'][f'{group_id}']['enabled']:
+                        data['group'][f'{group_id}']['enabled'].remove(service)
+            data['group'][f'{group_id}']['enabled'].sort()
         else:
-            data[f'{group_id}']['level'] = level
+            data['group'][f'{group_id}']['level'] = level
         checkDir(getSave())
         dumpJson(auth.authData, data)
 
     def check(group_id: int, service: Optional[str] = None) -> int:
-        data = loadJson(auth.authData)
-        if not f'{group_id}' in data:
+        data = loadJson(auth.authData, auth.template)
+        if not f'{group_id}' in data['group']:
             return False
         if service:
-            if not 'enabled' in data[f'{group_id}']:
+            if not 'enabled' in data['group'][f'{group_id}']:
                 return False
-            return bool(service in data[f'{group_id}']['enabled'])
-        if not f'{group_id}' in data:
+            return bool(service in data['group'][f'{group_id}']['enabled'])
+        if not f'{group_id}' in data['group']:
             return 0
-        elif not 'level' in data[f'{group_id}']:
+        elif not 'level' in data['group'][f'{group_id}']:
             return 0
-        return data[f'{group_id}']['level']
+        return data['group'][f'{group_id}']['level']
 
     def show(group_id: int) -> Optional[dict]:
-        data = loadJson(auth.authData)
-        if not f'{group_id}' in data:
+        data = loadJson(auth.authData, auth.template)
+        if not f'{group_id}' in data['group']:
             return None
         status = {}
-        for i in list(data[f'{group_id}'].keys()):
-            status[i] = deepcopy(data[f'{group_id}'][i])
+        for i in data['group'][f'{group_id}']:
+            status[i] = deepcopy(data['group'][f'{group_id}'][i])
         return status if status else None
 
     @manager.handle()
@@ -371,20 +378,21 @@ def isInService(service: Optional[str] = None, level: Optional[int] = None) -> R
             else:
                 return True
         elif isinstance(event, NoticeEvent):
-            if service and auth.policy == 0:
+            if isinstance(event, FriendAddNoticeEvent) or isinstance(event, FriendRecallNoticeEvent):
+                return True
+            elif service and auth.policy == 0:
                 return auth.check(event.group_id, service)
             elif level and auth.policy == 1:
                 return bool(auth.check(event.group_id) >= level)
         elif isinstance(event, RequestEvent):
-            if service and auth.policy == 0:
+            if isinstance(event, FriendRequestEvent):
+                return True
+            elif service and auth.policy == 0:
                 return auth.check(event.group_id, service)
             elif level and auth.policy == 1:
                 return bool(auth.check(event.group_id) >= level)
         elif isinstance(event, MetaEvent):
-            if service and auth.policy == 0:
-                return auth.check(event.group_id, service)
-            elif level and auth.policy == 1:
-                return bool(auth.check(event.group_id) >= level)
+            return True
         else:
             logger.warning('Not supported: nonebot_plugin_rauthman')
             return True
