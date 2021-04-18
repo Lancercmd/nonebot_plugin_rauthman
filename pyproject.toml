@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nonebot_plugin_rauthman"
-version = "2.0.0-alpha.8.post9"
+version = "2.0.0-alpha.13"
 description = "Rule-based authorization manager worked with nonebot2"
 authors = ["Lancercmd <lancercmd@gmail.com>"]
 license = "GPLv3"
@@ -9,12 +9,13 @@ repository = "https://github.com/Lancercmd/nonebot_plugin_rauthman"
 
 [tool.poetry.dependencies]
 python = "^3.8"
-nonebot2 = "^2.0.0-alpha.8"
-ujson = "^4.0.1"
+nonebot2 = "^2.0.0-alpha.13"
+ujson = "^4.0.2"
+nonebot-adapter-cqhttp = "^2.0.0-alpha.13"
 
 [tool.poetry.dev-dependencies]
-pytest = "^6.1"
-autopep8 = "^1.5.4"
+pytest = "^6.2.3"
+autopep8 = "^1.5.6"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
