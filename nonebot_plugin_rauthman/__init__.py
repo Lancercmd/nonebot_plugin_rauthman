@@ -2,16 +2,15 @@
 Author       : Lancercmd
 Date         : 2020-10-12 10:20:46
 LastEditors  : Lancercmd
-LastEditTime : 2021-01-14 11:42:07
+LastEditTime : 2021-04-19 02:22:07
 Description  : None
 GitHub       : https://github.com/Lancercmd
 '''
-import os
-import sys
 from copy import deepcopy
-from os import path, rename
+from os import makedirs, path, rename
+from sys import path as spath
 from time import time
-from typing import Optional
+from typing import Any, Dict, Optional
 
 import nonebot
 from loguru import logger
@@ -23,7 +22,7 @@ from nonebot.adapters.cqhttp.event import (FriendAddNoticeEvent,
                                            MetaEvent, NoticeEvent,
                                            PrivateMessageEvent, RequestEvent)
 from nonebot.exception import ActionFailed
-from nonebot.permission import SUPERUSER
+from nonebot.permission import Permission, SUPERUSER
 from nonebot.plugin import on_command
 from nonebot.rule import Rule
 from nonebot.typing import T_State
@@ -36,12 +35,12 @@ except ImportError:
 config = nonebot.get_driver().config
 
 
-def checkDir(dir: str):
+def checkDir(dir: str) -> None:
     if not path.exists(dir):
-        os.makedirs(dir)
+        makedirs(dir)
 
 
-def dumpJson(dir: str, dict: dict):
+def dumpJson(dir: str, dict: Dict) -> None:
     _dict = {}
     for i in sorted(list(dict.keys())):
         _dict[i] = dict[i]
@@ -49,7 +48,7 @@ def dumpJson(dir: str, dict: dict):
         json.dump(_dict, file, ensure_ascii=False, indent=4)
 
 
-def loadJson(dir: str, dict: dict = {}) -> dict:
+def loadJson(dir: str, dict: Dict = {}) -> Optional[Dict[str, Dict[str, Any]]]:
     if path.exists(dir):
         with open(dir, 'r', encoding='utf-8') as file:
             return json.load(file)
@@ -59,11 +58,11 @@ def loadJson(dir: str, dict: dict = {}) -> dict:
 
 def getSave(id: int = None, flag: int = 0) -> str:
     if not id:
-        return path.join(sys.path[0], config.savedata)
+        return path.join(spath[0], config.savedata)
     elif flag == 0:
-        return path.join(sys.path[0], config.savedata, 'private', f'{id}.json')
+        return path.join(spath[0], config.savedata, 'private', f'{id}.json')
     elif flag == 1:
-        return path.join(sys.path[0], config.savedata, 'group', f'{id}.json')
+        return path.join(spath[0], config.savedata, 'group', f'{id}.json')
 
 
 class auth:
@@ -107,6 +106,21 @@ class auth:
         show = '-s' if not config.auth_show else config.auth_show
         available = '-av' if not config.auth_available else config.auth_available
     manager = on_command(options.command, permission=SUPERUSER, block=True)
+
+    @manager.permission_updater
+    async def _(bot: Bot, event: Event, state: T_State, permission: Permission):
+        message_type = event.message_type
+        user_id = event.get_user_id()
+        group_id = None
+        if isinstance(event, GroupMessageEvent):
+            group_id = event.group_id
+
+        async def _onFocus(bot: Bot, event: Event):
+            if isinstance(event, GroupMessageEvent):
+                return event.message_type == message_type and event.get_user_id() == user_id and await permission(bot, event) and event.group_id == group_id
+            elif isinstance(event, PrivateMessageEvent):
+                return event.message_type == message_type and event.get_user_id() == user_id and await permission(bot, event)
+        return Permission(_onFocus)
 
     def set(group_id: int, services: Optional[list] = None, level: Optional[int] = None):
         data = loadJson(auth.authData, auth.template)
