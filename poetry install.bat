@@ -1,5 +1,5 @@
 @echo off
-python -m pip install -U pip
-pip install poetry
+python -m pip install -U pip poetry
+poetry run python -m pip install -U pip
 poetry install
 pause
