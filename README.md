@@ -94,7 +94,7 @@ from nonebot_plugin_rauthman import isInService
 
 command = on_command('cmd', rule=isInService('module_name', 1))
 ```
-这样，群聊必须被启用了该功能，或功能级别高于指定值（取决于当前应用的授权管理应用策略）才会进入事件处理
+这样，群聊必须被启用了该功能，或功能级别高于 `1` 才会进入事件处理（取决于当前应用的授权管理应用策略）
 ## 小白案例
 以 PyPI 发行版来源为例，基于以下配置文件和事件响应器
 ```python
@@ -119,7 +119,7 @@ notice = on_notice(rule=to_me() & isInService('戳一戳', 1))
   &nbsp;&nbsp;&nbsp;&nbsp;本地 JSON 文件中不存在该群群号，则会提示为群聊未注册  
   &nbsp;&nbsp;&nbsp;&nbsp;进行一次授权变更操作即可生成，如 `ram 0`
 - ***谁可以开启/关闭功能？***  
-  &nbsp;&nbsp;&nbsp;&nbsp;`SUPERUSERS` 在 `.env.*` 中定义，参考 [基本配置](https://v2.nonebot.dev/guide/basic-configuration.html#env-%E6%96%87%E4%BB%B6-2)
+  &nbsp;&nbsp;&nbsp;&nbsp;`SUPERUSERS` 在 `.env.*` 中定义，参考 [配置](https://v2.nonebot.dev/docs/tutorial/configuration#env-%E6%96%87%E4%BB%B6-1)
 - ***批量对群进行授权修改？***  
   &nbsp;&nbsp;&nbsp;&nbsp;私聊 Bot 直接发送 `ram` 并根据提示操作
 - ***我设置了 `ram_policy = 1`，怎么设置群 Level？***  
