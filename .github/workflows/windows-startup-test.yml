@@ -2,9 +2,9 @@ name: Windows startup test
 
 on:
   push:
-    branches: [ main ]
+    branches: [ master ]
   pull_request:
-    branches: [ main ]
+    branches: [ master ]
   workflow_dispatch:
 
 jobs:
@@ -14,10 +14,10 @@ jobs:
     steps:
     - name: Initialize
       uses: actions/checkout@v2
-    - name: Set up Python 3.9.4
+    - name: Set up Python 3.9.9
       uses: actions/setup-python@v2
       with:
-        python-version: 3.9.4
+        python-version: 3.9.9
     - name: Run Powershell
       run: |
         powershell
@@ -42,7 +42,7 @@ jobs:
         steps.poetry-cache.outputs.cache-hit != 'true'
       run: |
         poetry install
-        python -m pip install -U nonebot2
+        poetry run python -m pip install -U nonebot2
     - name: Fetch test environment
       run: |
         $client = new-object System.Net.WebClient

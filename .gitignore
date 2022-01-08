@@ -135,7 +135,6 @@ tests/
 */.env.*
 *.db
 *.json
-*.lock
 
 # VSCode
 .vscode/
