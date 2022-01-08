@@ -167,7 +167,7 @@ Highlights
    | 进行一次授权变更操作即可生成，如 ``ram 0``
 
 * 谁可以开启/关闭功能？
-   | ``SUPERUSERS`` 在 ``.env.*`` 中定义，参考 `基本配置 <https://v2.nonebot.dev/guide/basic-configuration.html#env-%E6%96%87%E4%BB%B6-2>`_
+   | ``SUPERUSERS`` 在 ``.env.*`` 中定义，参考 `配置 <https://v2.nonebot.dev/docs/tutorial/configuration#env-%E6%96%87%E4%BB%B6-1>`_
 
 * 批量对群进行授权修改？
    | 私聊 Bot 直接发送 ``ram`` 并根据提示操作
