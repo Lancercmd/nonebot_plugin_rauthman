@@ -2,7 +2,7 @@
 Author       : Lancercmd
 Date         : 2021-12-17 09:45:45
 LastEditors  : Lancercmd
-LastEditTime : 2022-01-08 17:54:55
+LastEditTime : 2022-01-14 23:25:49
 Description  : None
 GitHub       : https://github.com/Lancercmd
 '''
@@ -18,7 +18,7 @@ from typing import Optional, Union
 
 from loguru import logger
 from nonebot import get_driver
-from nonebot.adapters import Bot, Event, MessageTemplate
+from nonebot.adapters import Bot, Event, Message, MessageTemplate
 from nonebot.adapters.onebot.v11 import Adapter as OneBot_V11_Adapter
 from nonebot.adapters.onebot.v11 import (FriendAddNoticeEvent,
                                          FriendRecallNoticeEvent,
@@ -26,7 +26,7 @@ from nonebot.adapters.onebot.v11 import (FriendAddNoticeEvent,
                                          MessageEvent, MetaEvent, NoticeEvent,
                                          PrivateMessageEvent, RequestEvent)
 from nonebot.exception import ActionFailed
-from nonebot.params import State
+from nonebot.params import CommandArg, State
 from nonebot.permission import SUPERUSER, Permission
 from nonebot.plugin import on_command
 from nonebot.rule import Rule
@@ -266,15 +266,16 @@ async def _(event: Event) -> Permission:
 
 
 @worker.handle()
-async def _(event: GroupMessageEvent, state: T_State = State()) -> None:
+async def _(event: GroupMessageEvent, state: T_State = State(), args: Message = CommandArg()) -> None:
     state["group_id"] = str(event.group_id)
-    if event.get_plaintext(state):
-        state["services"] = event.get_plaintext(state)
+    _plain_text = args.extract_plain_text()
+    if _plain_text:
+        state["services"] = _plain_text
 
 
 @worker.handle()
-async def _(event: PrivateMessageEvent, state: T_State = State()) -> None:
-    actions = event.get_plaintext(state).split(" ", 1)
+async def _(event: PrivateMessageEvent, state: T_State = State(), args: Message = CommandArg()) -> None:
+    actions = args.extract_plain_text().split(" ", 1)
     if len(actions) == 1:
         if actions[0] == _opt.available:
             state["group_id"] = "0"
@@ -299,6 +300,7 @@ async def _(event: Event, state: T_State = State()) -> None:
         state["prompt"] = "请输入需要操作的群号，并用空格隔开~"
     else:
         logger.warning("Not supported: RAM")
+        return
 
 
 @worker.got("group_id", prompt=MessageTemplate("{prompt}"))
@@ -335,7 +337,7 @@ async def _(event: MessageEvent, state: T_State = State()) -> None:
 
 
 @worker.got("services", prompt=MessageTemplate("{prompt}"))
-async def _(bot: Bot, event: MessageEvent, state: T_State = State()) -> None:
+async def _(bot: Bot, event: MessageEvent, state: T_State = State(), args: Message = CommandArg()) -> None:
     try:
         _input = str(state["services"])
         _services = _input.split(" ")
@@ -349,11 +351,11 @@ async def _(bot: Bot, event: MessageEvent, state: T_State = State()) -> None:
                     _amc.set_universal(bot, group_id, level=int(_services[0]))
                     if len(state["group_ids"]) == 1:
                         segments.append(
-                            f"群 Level {prev} => {event.get_plaintext(state)}"
+                            f"群 Level {prev} => {args.extract_plain_text()}"
                         )
                     else:
                         segments.append(
-                            f"群 {group_id} Level {prev} => {event.get_plaintext(state)}"
+                            f"群 {group_id} Level {prev} => {args.extract_plain_text()}"
                         )
                 await worker.finish("\n".join(segments))
             elif _services[0] == _opt.show:
