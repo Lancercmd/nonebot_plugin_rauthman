@@ -150,8 +150,8 @@ Highlights
 .. code:: python
 
  from nonebot.plugin import on_notice
-
  from nonebot_plugin_rauthman import isInService
+
  notice = on_notice(rule=to_me() & isInService('戳一戳', 1))
 
 | 使用过程 `预览图 <BotTest1.jpg>`_

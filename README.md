@@ -107,8 +107,8 @@ ram_available = 全局查询  # 展示全局可用功能（根据可用功能）
 ```
 ```python
 from nonebot.plugin import on_notice
-
 from nonebot_plugin_rauthman import isInService
+
 notice = on_notice(rule=to_me() & isInService('戳一戳', 1))
 ```
 ![1626748739905](BotTest1.jpg)

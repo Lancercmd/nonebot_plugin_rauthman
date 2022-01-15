@@ -34,9 +34,9 @@ jobs:
         path: |
           C:\Users\runneradmin\AppData\Local\pypoetry
         key: |
-          Yuni-v2.0.0b1
+          Yuni-${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
         restore-keys: |
-          Yuni-v2.0.0b1
+          Yuni-${{ runner.os }}-poetry-${{ hashFiles('**/poetry.lock') }}
     - name: Install dependencies
       if: |
         steps.poetry-cache.outputs.cache-hit != 'true'
