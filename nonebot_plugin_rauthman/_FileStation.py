@@ -1,11 +1,11 @@
-'''
+"""
 Author       : Lancercmd
 Date         : 2021-12-07 15:34:10
 LastEditors  : Lancercmd
 LastEditTime : 2022-01-05 22:11:54
 Description  : None
 GitHub       : https://github.com/Lancercmd
-'''
+"""
 from __future__ import annotations
 
 from datetime import datetime
@@ -36,6 +36,7 @@ class FileStation:
     ##    FileStation - 对象化的通用文件读写管理器
     -     构造一个 FileStation 对象，然后简单和安全地实现对文件的读写。
     """
+
     superfetch: dict = {}
     """
     ###   Superfetch - FileStation 对象的超级缓存
@@ -76,23 +77,17 @@ class FileStation:
                 f"<y>FileStation</y> is now saving {_len} files."
             )
             while _len:
-                success = \
-                    FileStation(list(FileStation.save_queue)[0]).do_save()
+                success = FileStation(list(FileStation.save_queue)[0]).do_save()
                 if success:
                     # logger.success(f"Saved {list(FileStation.save_queue)[0]}")
-                    FileStation.save_queue.remove(
-                        list(FileStation.save_queue)[0]
-                    )
+                    FileStation.save_queue.remove(list(FileStation.save_queue)[0])
                     _len -= 1
                 else:
-                    logger.warning(
-                        f"Failed to save {list(FileStation.save_queue)[0]}"
-                    )
+                    logger.warning(f"Failed to save {list(FileStation.save_queue)[0]}")
                     try:
-                        _success = \
-                            FileStation(
-                                list(FileStation.save_queue)[1]
-                            ).do_save()
+                        _success = FileStation(
+                            list(FileStation.save_queue)[1]
+                        ).do_save()
                         if _success:
                             FileStation.save_queue.remove(
                                 list(FileStation.save_queue)[1]
@@ -105,7 +100,15 @@ class FileStation:
         else:
             logger.success("All files saved")
 
-    def __init__(self, filepath: str | Path = None, module_name: Optional[str] = None, *, json_string: Optional[str] = None, use_superfetch: bool = False, scheduler: BaseScheduler = None) -> None:
+    def __init__(
+        self,
+        filepath: str | Path = None,
+        module_name: Optional[str] = None,
+        *,
+        json_string: Optional[str] = None,
+        use_superfetch: bool = False,
+        scheduler: BaseScheduler = None,
+    ) -> None:
         """
         ###   FileStation - 构造函数
         -     构造一个 FileStation 对象，然后简单和安全地实现对文件的读写。
@@ -159,7 +162,7 @@ class FileStation:
         methods = [
             self._load_from_superfetch,
             self._load_from_json_string,
-            self._load_from_json_file
+            self._load_from_json_file,
         ]
         for method in methods:
             method()
@@ -235,9 +238,7 @@ class FileStation:
             self.sort()
             if snapshot:
                 if exists(self._filepath):
-                    now = datetime.now().strftime(
-                        r"%Y%m%d-%H%M%S-%f"
-                    )[:-3]
+                    now = datetime.now().strftime(r"%Y%m%d-%H%M%S-%f")[:-3]
                     rename(self._filepath, f"{self._filepath[:-5]}-{now}.json")
             if self._use_superfetch:
                 FileStation.save_queue.add(self._filepath)
@@ -282,8 +283,9 @@ class FileStation:
                 dumpJson(self._data, f, ensure_ascii=False, indent=4)
                 return True
         except Exception as e:
-            logger.warning(e) \
-                if self._filepath in FileStation.superfetch else logger.error(e)
+            logger.warning(
+                e
+            ) if self._filepath in FileStation.superfetch else logger.error(e)
             return False
 
     def do_save_safe(self) -> None:
@@ -302,8 +304,9 @@ class FileStation:
             rename(f"{self._filepath}_safe", self._filepath)
             return True
         except Exception as e:
-            logger.warning(e) \
-                if self._filepath in FileStation.superfetch else logger.error(e)
+            logger.warning(
+                e
+            ) if self._filepath in FileStation.superfetch else logger.error(e)
             return False
 
     def sort(self, **kwargs) -> None:
@@ -334,8 +337,7 @@ class FileStation:
         -     key: 排序的字段。
         -     reverse: 是否倒序。
         """
-        self.data = \
-            {k: v for k, v in sorted(self.data.items(), **kwargs)}
+        self.data = {k: v for k, v in sorted(self.data.items(), **kwargs)}
 
     def _sort_1(self, **kwargs) -> None:
         """
@@ -346,8 +348,7 @@ class FileStation:
         -     key: 排序的字段。
         -     reverse: 是否倒序。
         """
-        self.data = \
-            {k: v for k, v in sorted(self._data.items(), **kwargs)}
+        self.data = {k: v for k, v in sorted(self._data.items(), **kwargs)}
 
     def sort_2(self, **kwargs) -> None:
         """
@@ -359,8 +360,7 @@ class FileStation:
         -     reverse: 是否倒序。
         """
         for k, v in self.data.items():
-            self.data[k] = \
-                {k2: v2 for k2, v2 in sorted(v.items(), **kwargs)}
+            self.data[k] = {k2: v2 for k2, v2 in sorted(v.items(), **kwargs)}
 
     def _sort_2(self, **kwargs) -> None:
         """
@@ -372,8 +372,7 @@ class FileStation:
         -     reverse: 是否倒序。
         """
         for k, v in self._data.items():
-            self._data[k] = \
-                {k2: v2 for k2, v2 in sorted(v.items(), **kwargs)}
+            self._data[k] = {k2: v2 for k2, v2 in sorted(v.items(), **kwargs)}
 
     def sort_3(self, **kwargs) -> None:
         """
@@ -386,8 +385,7 @@ class FileStation:
         """
         for k, v in self.data.items():
             for k2, v2 in v.items():
-                self.data[k][k2] = \
-                    {k3: v3 for k3, v3 in sorted(v2.items(), **kwargs)}
+                self.data[k][k2] = {k3: v3 for k3, v3 in sorted(v2.items(), **kwargs)}
 
     def _sort_3(self, **kwargs) -> None:
         """
@@ -400,8 +398,7 @@ class FileStation:
         """
         for k, v in self._data.items():
             for k2, v2 in v.items():
-                self._data[k][k2] = \
-                    {k3: v3 for k3, v3 in sorted(v2.items(), **kwargs)}
+                self._data[k][k2] = {k3: v3 for k3, v3 in sorted(v2.items(), **kwargs)}
 
     def insert(self, key: str, value: Any) -> bool:
         """
@@ -708,8 +705,7 @@ if __name__ == "__main__":
         ###   FileStation - 测试获取所有键
         """
         fs = FileStation(test_filepath)
-        assert fs.keys() == dict.keys(test_data_3), \
-            (fs.keys(), dict.keys(test_data_3))
+        assert fs.keys() == dict.keys(test_data_3), (fs.keys(), dict.keys(test_data_3))
         logger.success(f"Memory usage: {fs.memory()} bytes")
 
     def test_values() -> Optional[AssertionError]:
@@ -717,8 +713,10 @@ if __name__ == "__main__":
         ###   FileStation - 测试获取所有值
         """
         fs = FileStation(test_filepath)
-        assert tuple(fs.values()) == tuple(dict.values(test_data_3)), \
-            (tuple(fs.values()), tuple(dict.values(test_data_3)))
+        assert tuple(fs.values()) == tuple(dict.values(test_data_3)), (
+            tuple(fs.values()),
+            tuple(dict.values(test_data_3)),
+        )
         logger.success(f"Memory usage: {fs.memory()} bytes")
 
     def test_hash() -> Optional[AssertionError]:
@@ -726,8 +724,7 @@ if __name__ == "__main__":
         ###   FileStation - 测试获取哈希值
         """
         fs = FileStation(test_filepath)
-        assert fs.hash() == hash(f"{test_data_3}"), \
-            (fs.hash(), hash(f"{test_data_3}"))
+        assert fs.hash() == hash(f"{test_data_3}"), (fs.hash(), hash(f"{test_data_3}"))
         logger.success(f"Memory usage: {fs.memory()} bytes")
 
     def test_len() -> Optional[AssertionError]:
@@ -792,13 +789,18 @@ if __name__ == "__main__":
         test_bool()
         vacuum()
         logger.success("All test passed")
+
     test_all()
 else:
     from nonebot import get_asgi, require
 
     FileStation.scheduler = require("nonebot_plugin_apscheduler").scheduler
     FileStation.scheduler.add_job(
-        FileStation.save_job, "interval", minutes=5, misfire_grace_time=300, id="FileStation.save_job"
+        FileStation.save_job,
+        "interval",
+        minutes=5,
+        misfire_grace_time=300,
+        id="FileStation.save_job",
     )
 
     app = get_asgi()
@@ -812,23 +814,17 @@ else:
                 f"<y>FileStation.save_queue</y> is not empty, waiting for {_len} files to be saved"
             )
             while _len:
-                success = \
-                    FileStation(list(FileStation.save_queue)[0]).do_save()
+                success = FileStation(list(FileStation.save_queue)[0]).do_save()
                 if success:
                     # logger.success(f"Saved {list(FileStation.save_queue)[0]}")
-                    FileStation.save_queue.remove(
-                        list(FileStation.save_queue)[0]
-                    )
+                    FileStation.save_queue.remove(list(FileStation.save_queue)[0])
                     _len -= 1
                 else:
-                    logger.warning(
-                        f"Failed to save {list(FileStation.save_queue)[0]}"
-                    )
+                    logger.warning(f"Failed to save {list(FileStation.save_queue)[0]}")
                     try:
-                        _success = \
-                            FileStation(
-                                list(FileStation.save_queue)[1]
-                            ).do_save()
+                        _success = FileStation(
+                            list(FileStation.save_queue)[1]
+                        ).do_save()
                         if _success:
                             FileStation.save_queue.remove(
                                 list(FileStation.save_queue)[1]
@@ -837,8 +833,6 @@ else:
                     except IndexError:
                         break
             if FileStation.save_queue:
-                logger.warning(
-                    f"{len(FileStation.save_queue)} files not saved"
-                )
+                logger.warning(f"{len(FileStation.save_queue)} files not saved")
             else:
                 logger.success("All files saved")

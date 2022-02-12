@@ -1,11 +1,11 @@
-'''
+"""
 Author       : Lancercmd
 Date         : 2021-12-17 09:45:45
 LastEditors  : Lancercmd
-LastEditTime : 2022-01-14 23:25:49
+LastEditTime : 2022-02-12 18:24:21
 Description  : None
 GitHub       : https://github.com/Lancercmd
-'''
+"""
 from __future__ import annotations
 
 from copy import deepcopy
@@ -20,11 +20,17 @@ from loguru import logger
 from nonebot import get_driver
 from nonebot.adapters import Bot, Event, Message, MessageTemplate
 from nonebot.adapters.onebot.v11 import Adapter as OneBot_V11_Adapter
-from nonebot.adapters.onebot.v11 import (FriendAddNoticeEvent,
-                                         FriendRecallNoticeEvent,
-                                         FriendRequestEvent, GroupMessageEvent,
-                                         MessageEvent, MetaEvent, NoticeEvent,
-                                         PrivateMessageEvent, RequestEvent)
+from nonebot.adapters.onebot.v11 import (
+    FriendAddNoticeEvent,
+    FriendRecallNoticeEvent,
+    FriendRequestEvent,
+    GroupMessageEvent,
+    MessageEvent,
+    MetaEvent,
+    NoticeEvent,
+    PrivateMessageEvent,
+    RequestEvent,
+)
 from nonebot.exception import ActionFailed
 from nonebot.params import CommandArg, State
 from nonebot.permission import SUPERUSER, Permission
@@ -38,7 +44,9 @@ from ._permission import onFocus
 config = get_driver().config
 
 
-def generate_savedata_path(id: int = None, *, flag: int = 0, _bot: Bot = None, _type: str = None) -> str:
+def generate_savedata_path(
+    id: int = None, *, flag: int = 0, _bot: Bot = None, _type: str = None
+) -> str:
     """
     ###   说明
     -     获取指定个人或群聊 QQ 号的存档路径
@@ -51,9 +59,7 @@ def generate_savedata_path(id: int = None, *, flag: int = 0, _bot: Bot = None, _
     -     bot: Bot  当前 Bot 实例，优先于 type 默认为 None
     -     type: str  指定 adapter 类型，默认为 None
     """
-    _path = join(
-        sys_path[0], getattr(config, "savedata") or ""
-    )
+    _path = join(sys_path[0], getattr(config, "savedata") or "")
     if _bot:
         _path = join(_path, _bot.type)
     elif _type:
@@ -77,11 +83,10 @@ class RAM:
     ###   当前已适配的 adapter 类型
     -     OneBot V11 (CQHTTP) （仅控制群聊）
     """
+
     module_name: str = "RAM"
     cqhttp: dict = field(default_factory=lambda: {"group": {}, "private": {}})
-    onebot_v11: dict = field(
-        default_factory=lambda: {"group": {}, "private": {}}
-    )
+    onebot_v11: dict = field(default_factory=lambda: {"group": {}, "private": {}})
 
 
 @dataclass
@@ -100,6 +105,7 @@ class Options:
     -     show: str  展示群功能状态
     -     available: str  展示全局可用功能
     """
+
     filepath: str = join(generate_savedata_path(), "global.json")
     permission: Permission = SUPERUSER
     policy: int = getattr(config, "ram_policy") or 0
@@ -153,12 +159,14 @@ class RAM_Control(FileStation):
 
         Finally, save the changes.
         """
+
         @wraps(func)
         def wrapper(self: RAM_Control, *args, **kwargs) -> None:
             func(self, *args, **kwargs)
             self._update(self._module_name, self.data)
             self.save()
             self.reload(full=True)
+
         return wrapper
 
     def convert_from_legacy(self) -> None:
@@ -173,14 +181,18 @@ class RAM_Control(FileStation):
 
     def _check_adapter(self, bot: Bot) -> bool:
         if bot.type in self._compatible_adapters:
-            self._base = getattr(
-                self, RAM_Control._compatible_adapters[bot.type]
-            )
+            self._base = getattr(self, RAM_Control._compatible_adapters[bot.type])
             return True
         return False
 
     @applicator
-    def set_universal(self: RAM_Control, bot: Bot, group_id: int, services: Optional[list[str]] = None, level: Optional[int] = None) -> None:
+    def set_universal(
+        self: RAM_Control,
+        bot: Bot,
+        group_id: int,
+        services: Optional[list[str]] = None,
+        level: Optional[int] = None,
+    ) -> None:
         if self._check_adapter(bot):
             _groups = self._base["group"]
             if not f"{group_id}" in _groups:
@@ -229,7 +241,9 @@ class RAM_Control(FileStation):
             else:
                 _home["level"] = level
 
-    def check_universal(self: RAM_Control, bot: Bot, group_id: int, service: Optional[str] = None) -> Union[bool, int]:
+    def check_universal(
+        self: RAM_Control, bot: Bot, group_id: int, service: Optional[str] = None
+    ) -> Union[bool, int]:
         if self._check_adapter(bot):
             _groups = self._base["group"]
             if not f"{group_id}" in _groups:
@@ -266,7 +280,9 @@ async def _(event: Event) -> Permission:
 
 
 @worker.handle()
-async def _(event: GroupMessageEvent, state: T_State = State(), args: Message = CommandArg()) -> None:
+async def _(
+    event: GroupMessageEvent, state: T_State = State(), args: Message = CommandArg()
+) -> None:
     state["group_id"] = str(event.group_id)
     _plain_text = args.extract_plain_text()
     if _plain_text:
@@ -274,7 +290,9 @@ async def _(event: GroupMessageEvent, state: T_State = State(), args: Message = 
 
 
 @worker.handle()
-async def _(event: PrivateMessageEvent, state: T_State = State(), args: Message = CommandArg()) -> None:
+async def _(
+    event: PrivateMessageEvent, state: T_State = State(), args: Message = CommandArg()
+) -> None:
     actions = args.extract_plain_text().split(" ", 1)
     if len(actions) == 1:
         if actions[0] == _opt.available:
@@ -290,8 +308,7 @@ async def _(event: PrivateMessageEvent, state: T_State = State(), args: Message 
 
 @worker.handle()
 async def _(event: Event, state: T_State = State()) -> None:
-    supported = \
-        isinstance(event, MessageEvent)
+    supported = isinstance(event, MessageEvent)
     if supported:
         state["add"] = _opt.add
         state["rm"] = _opt.rm
@@ -326,18 +343,25 @@ async def _(event: MessageEvent, state: T_State = State()) -> None:
             f"ActionFailed {e.info['retcode']} {e.info['msg'].lower()} {e.info['wording']}"
         )
         return
-    state["prompt"] = "\n".join([
-        "请继续输入——",
-        f"{state['add']} sv1 sv2 ... | 启用功能",
-        f"{state['rm']} sv1 sv2 ... | 禁用功能",
-        f"{state['show']} | 查看群功能状态",
-        f"{state['available']} | 展示全局可用功能",
-        "※ 设置群级别请直接发送数字"
-    ])
+    state["prompt"] = "\n".join(
+        [
+            "请继续输入——",
+            f"{state['add']} sv1 sv2 ... | 启用功能",
+            f"{state['rm']} sv1 sv2 ... | 禁用功能",
+            f"{state['show']} | 查看群功能状态",
+            f"{state['available']} | 展示全局可用功能",
+            "※ 设置群级别请直接发送数字",
+        ]
+    )
 
 
 @worker.got("services", prompt=MessageTemplate("{prompt}"))
-async def _(bot: Bot, event: MessageEvent, state: T_State = State(), args: Message = CommandArg()) -> None:
+async def _(
+    bot: Bot,
+    event: MessageEvent,
+    state: T_State = State(),
+    args: Message = CommandArg(),
+) -> None:
     try:
         _input = str(state["services"])
         _services = _input.split(" ")
@@ -368,9 +392,7 @@ async def _(bot: Bot, event: MessageEvent, state: T_State = State(), args: Messa
                         _status = []
                         for i in keys:
                             if isinstance(status[i], list):
-                                _status.append(
-                                    " ".join(status[i]).replace(",", "")
-                                )
+                                _status.append(" ".join(status[i]).replace(",", ""))
                             else:
                                 _status.append(status[i])
                         for i in range(len(keys)):
@@ -431,6 +453,8 @@ async def _(bot: Bot, event: MessageEvent, state: T_State = State(), args: Messa
         logger.warning(
             f"ActionFailed {e.info['retcode']} {e.info['msg'].lower()} {e.info['wording']}"
         )
+
+
 available = []
 warning = False
 
@@ -458,28 +482,51 @@ def isInService(service: Optional[str] = None, level: Optional[int] = None) -> R
         if isinstance(event, MessageEvent):
             if isinstance(event, GroupMessageEvent):
                 if service and _opt.policy == 0:
-                    return _amc.check_universal(bot, getattr(event, "group_id"), service)
+                    return _amc.check_universal(
+                        bot, getattr(event, "group_id"), service
+                    )
                 elif level and _opt.policy == 1:
-                    return _amc.check_universal(bot, getattr(event, "group_id")) >= level
+                    return (
+                        _amc.check_universal(bot, getattr(event, "group_id")) >= level
+                    )
             else:
                 return True
         elif isinstance(event, NoticeEvent):
-            if isinstance(event, FriendAddNoticeEvent) or isinstance(event, FriendRecallNoticeEvent):
+            if isinstance(event, FriendAddNoticeEvent) or isinstance(
+                event, FriendRecallNoticeEvent
+            ):
                 return True
             elif service and _opt.policy == 0:
-                return _amc.check_universal(bot, getattr(event, "group_id"), service) if getattr(event, "group_id") else False
+                return (
+                    _amc.check_universal(bot, getattr(event, "group_id"), service)
+                    if getattr(event, "group_id")
+                    else False
+                )
             elif level and _opt.policy == 1:
-                return _amc.check_universal(bot, getattr(event, "group_id")) >= level if getattr(event, "group_id") else False
+                return (
+                    _amc.check_universal(bot, getattr(event, "group_id")) >= level
+                    if getattr(event, "group_id")
+                    else False
+                )
         elif isinstance(event, RequestEvent):
             if isinstance(event, FriendRequestEvent):
                 return True
             elif service and _opt.policy == 0:
-                return _amc.check_universal(bot, getattr(event, "group_id"), service) if getattr(event, "group_id") else False
+                return (
+                    _amc.check_universal(bot, getattr(event, "group_id"), service)
+                    if getattr(event, "group_id")
+                    else False
+                )
             elif level and _opt.policy == 1:
-                return _amc.check_universal(bot, getattr(event, "group_id")) >= level if getattr(event, "group_id") else False
+                return (
+                    _amc.check_universal(bot, getattr(event, "group_id")) >= level
+                    if getattr(event, "group_id")
+                    else False
+                )
         elif isinstance(event, MetaEvent):
             return True
         else:
             logger.warning("Not supported: RAM")
             return True
+
     return Rule(_isInService)
