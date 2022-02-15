@@ -2,7 +2,7 @@
 Author       : Lancercmd
 Date         : 2021-12-17 09:45:45
 LastEditors  : Lancercmd
-LastEditTime : 2022-02-15 01:55:08
+LastEditTime : 2022-02-15 21:53:55
 Description  : None
 GitHub       : https://github.com/Lancercmd
 """
@@ -165,7 +165,7 @@ class RAM_Control(FileStation):
             func(self, *args, **kwargs)
             self._update(self._module_name, self.data)
             self.save()
-            self.reload(full=True)
+            self.reload()
 
         return wrapper
 
