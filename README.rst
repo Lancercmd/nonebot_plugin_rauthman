@@ -71,12 +71,12 @@ Highlights
      -     available: str  展示全局可用功能
      """
      permission: Permission = SUPERUSER
-     policy: int = getattr(config, "ram_policy") or 0
-     cmd: str = getattr(config, "ram_cmd") or "ram"
-     add: str = getattr(config, "ram_add") or "-a"
-     rm: str = getattr(config, "ram_rm") or "-r"
-     show: str = getattr(config, "ram_show") or "-s"
-     available: str = getattr(config, "ram_available") or "-v"
+     policy: int = getattr(config, "ram_policy", 0) or 0
+     cmd: str = getattr(config, "ram_cmd", "ram") or "ram"
+     add: str = getattr(config, "ram_add", "-a") or "-a"
+     rm: str = getattr(config, "ram_rm", "-r") or "-r"
+     show: str = getattr(config, "ram_show", "-s") or "-s"
+     available: str = getattr(config, "ram_available", "-v") or "-v"
 
 ******************************************************************************
 开始使用
@@ -179,7 +179,7 @@ Highlights
      授权修改操作与当前授权策略无关
 
 * 如果我希望在一个群中，管理员和群主可以修改开关/设置群 Level 我该怎么办？
-   | 对源代码第 ``104`` 行进行修改
+   | 对源代码第 ``110`` 行进行修改
 
 .. code:: python
 
