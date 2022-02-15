@@ -2,7 +2,7 @@
 Author       : Lancercmd
 Date         : 2021-12-17 09:45:45
 LastEditors  : Lancercmd
-LastEditTime : 2022-02-12 18:24:21
+LastEditTime : 2022-02-15 01:55:08
 Description  : None
 GitHub       : https://github.com/Lancercmd
 """
@@ -32,7 +32,7 @@ from nonebot.adapters.onebot.v11 import (
     RequestEvent,
 )
 from nonebot.exception import ActionFailed
-from nonebot.params import CommandArg, State
+from nonebot.params import CommandArg
 from nonebot.permission import SUPERUSER, Permission
 from nonebot.plugin import on_command
 from nonebot.rule import Rule
@@ -59,7 +59,7 @@ def generate_savedata_path(
     -     bot: Bot  当前 Bot 实例，优先于 type 默认为 None
     -     type: str  指定 adapter 类型，默认为 None
     """
-    _path = join(sys_path[0], getattr(config, "savedata") or "")
+    _path = join(sys_path[0], getattr(config, "savedata", "") or "")
     if _bot:
         _path = join(_path, _bot.type)
     elif _type:
@@ -108,12 +108,12 @@ class Options:
 
     filepath: str = join(generate_savedata_path(), "global.json")
     permission: Permission = SUPERUSER
-    policy: int = getattr(config, "ram_policy") or 0
-    cmd: str = getattr(config, "ram_cmd") or "ram"
-    add: str = getattr(config, "ram_add") or "-a"
-    rm: str = getattr(config, "ram_rm") or "-r"
-    show: str = getattr(config, "ram_show") or "-s"
-    available: str = getattr(config, "ram_available") or "-v"
+    policy: int = getattr(config, "ram_policy", 0) or 0
+    cmd: str = getattr(config, "ram_cmd", "ram") or "ram"
+    add: str = getattr(config, "ram_add", "-a") or "-a"
+    rm: str = getattr(config, "ram_rm", "-r") or "-r"
+    show: str = getattr(config, "ram_show", "-s") or "-s"
+    available: str = getattr(config, "ram_available", "-v") or "-v"
 
 
 _opt = Options()
@@ -281,7 +281,7 @@ async def _(event: Event) -> Permission:
 
 @worker.handle()
 async def _(
-    event: GroupMessageEvent, state: T_State = State(), args: Message = CommandArg()
+    event: GroupMessageEvent, state: T_State, args: Message = CommandArg()
 ) -> None:
     state["group_id"] = str(event.group_id)
     _plain_text = args.extract_plain_text()
@@ -291,7 +291,7 @@ async def _(
 
 @worker.handle()
 async def _(
-    event: PrivateMessageEvent, state: T_State = State(), args: Message = CommandArg()
+    event: PrivateMessageEvent, state: T_State, args: Message = CommandArg()
 ) -> None:
     actions = args.extract_plain_text().split(" ", 1)
     if len(actions) == 1:
@@ -307,7 +307,7 @@ async def _(
 
 
 @worker.handle()
-async def _(event: Event, state: T_State = State()) -> None:
+async def _(event: Event, state: T_State) -> None:
     supported = isinstance(event, MessageEvent)
     if supported:
         state["add"] = _opt.add
@@ -321,7 +321,7 @@ async def _(event: Event, state: T_State = State()) -> None:
 
 
 @worker.got("group_id", prompt=MessageTemplate("{prompt}"))
-async def _(event: MessageEvent, state: T_State = State()) -> None:
+async def _(event: MessageEvent, state: T_State) -> None:
     try:
         _input = str(state["group_id"])
         _group_id = _input.split(" ")
@@ -359,7 +359,7 @@ async def _(event: MessageEvent, state: T_State = State()) -> None:
 async def _(
     bot: Bot,
     event: MessageEvent,
-    state: T_State = State(),
+    state: T_State,
     args: Message = CommandArg(),
 ) -> None:
     try:
