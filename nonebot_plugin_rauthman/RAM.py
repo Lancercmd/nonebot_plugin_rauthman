@@ -2,7 +2,7 @@
 Author       : Lancercmd
 Date         : 2021-12-17 09:45:45
 LastEditors  : Lancercmd
-LastEditTime : 2022-02-15 21:53:55
+LastEditTime : 2022-02-16 22:35:41
 Description  : None
 GitHub       : https://github.com/Lancercmd
 """
@@ -32,7 +32,7 @@ from nonebot.adapters.onebot.v11 import (
     RequestEvent,
 )
 from nonebot.exception import ActionFailed
-from nonebot.params import CommandArg
+from nonebot.params import Arg, CommandArg
 from nonebot.permission import SUPERUSER, Permission
 from nonebot.plugin import on_command
 from nonebot.rule import Rule
@@ -360,7 +360,7 @@ async def _(
     bot: Bot,
     event: MessageEvent,
     state: T_State,
-    args: Message = CommandArg(),
+    args: Message = Arg("services"),
 ) -> None:
     try:
         _input = str(state["services"])
