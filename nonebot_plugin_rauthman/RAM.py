@@ -2,7 +2,7 @@
 Author       : Lancercmd
 Date         : 2021-12-17 09:45:45
 LastEditors  : Lancercmd
-LastEditTime : 2022-02-16 22:35:41
+LastEditTime : 2022-03-24 14:55:41
 Description  : None
 GitHub       : https://github.com/Lancercmd
 """
@@ -360,7 +360,6 @@ async def _(
     bot: Bot,
     event: MessageEvent,
     state: T_State,
-    args: Message = Arg("services"),
 ) -> None:
     try:
         _input = str(state["services"])
@@ -374,12 +373,10 @@ async def _(
                     prev = _amc.check_universal(bot, group_id)
                     _amc.set_universal(bot, group_id, level=int(_services[0]))
                     if len(state["group_ids"]) == 1:
-                        segments.append(
-                            f"群 Level {prev} => {args.extract_plain_text()}"
-                        )
+                        segments.append(f"群 Level {prev} =>" + str(state["services"]))
                     else:
                         segments.append(
-                            f"群 {group_id} Level {prev} => {args.extract_plain_text()}"
+                            f"群 {group_id} Level {prev} =>" + str(state["services"])
                         )
                 await worker.finish("\n".join(segments))
             elif _services[0] == _opt.show:
