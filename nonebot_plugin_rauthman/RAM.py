@@ -2,7 +2,7 @@
 Author       : Lancercmd
 Date         : 2021-12-17 09:45:45
 LastEditors  : Lancercmd
-LastEditTime : 2022-03-24 14:55:41
+LastEditTime : 2022-05-25 12:10:23
 Description  : None
 GitHub       : https://github.com/Lancercmd
 """
@@ -19,20 +19,29 @@ from typing import Optional, Union
 from loguru import logger
 from nonebot import get_driver
 from nonebot.adapters import Bot, Event, Message, MessageTemplate
-from nonebot.adapters.onebot.v11 import Adapter as OneBot_V11_Adapter
 from nonebot.adapters.onebot.v11 import (
-    FriendAddNoticeEvent,
-    FriendRecallNoticeEvent,
-    FriendRequestEvent,
-    GroupMessageEvent,
-    MessageEvent,
-    MetaEvent,
-    NoticeEvent,
-    PrivateMessageEvent,
-    RequestEvent,
+    Adapter as OneBot_V11_Adapter,
+    MessageEvent as OneBot_V11_MessageEvent,
+    PrivateMessageEvent as OneBot_V11_PrivateMessageEvent,
+    GroupMessageEvent as OneBot_V11_GroupMessageEvent,
+    FriendAddNoticeEvent as OneBot_V11_FriendAddNoticeEvent,
+    FriendRecallNoticeEvent as OneBot_V11_FriendRecallNoticeEvent,
+    FriendRequestEvent as OneBot_V11_FriendRequestEvent,
+    GroupAdminNoticeEvent as OneBot_V11_GroupAdminNoticeEvent,
+    GroupBanNoticeEvent as OneBot_V11_GroupBanNoticeEvent,
+    GroupDecreaseNoticeEvent as OneBot_V11_GroupDecreaseNoticeEvent,
+    GroupIncreaseNoticeEvent as OneBot_V11_GroupIncreaseNoticeEvent,
+    GroupRecallNoticeEvent as OneBot_V11_GroupRecallNoticeEvent,
+    GroupRequestEvent as OneBot_V11_GroupRequestEvent,
+    GroupUploadNoticeEvent as OneBot_V11_GroupUploadNoticeEvent,
+    HeartbeatMetaEvent as OneBot_V11_HeartbeatMetaEvent,
+    HonorNotifyEvent as OneBot_V11_HonorNotifyEvent,
+    LifecycleMetaEvent as OneBot_V11_LifecycleMetaEvent,
+    LuckyKingNotifyEvent as OneBot_V11_LuckyKingNotifyEvent,
+    PokeNotifyEvent as OneBot_V11_PokeNotifyEvent,
 )
 from nonebot.exception import ActionFailed
-from nonebot.params import Arg, CommandArg
+from nonebot.params import CommandArg
 from nonebot.permission import SUPERUSER, Permission
 from nonebot.plugin import on_command
 from nonebot.rule import Rule
@@ -281,7 +290,7 @@ async def _(event: Event) -> Permission:
 
 @worker.handle()
 async def _(
-    event: GroupMessageEvent, state: T_State, args: Message = CommandArg()
+    event: OneBot_V11_GroupMessageEvent, state: T_State, args: Message = CommandArg()
 ) -> None:
     state["group_id"] = str(event.group_id)
     _plain_text = args.extract_plain_text()
@@ -291,7 +300,7 @@ async def _(
 
 @worker.handle()
 async def _(
-    event: PrivateMessageEvent, state: T_State, args: Message = CommandArg()
+    event: OneBot_V11_PrivateMessageEvent, state: T_State, args: Message = CommandArg()
 ) -> None:
     actions = args.extract_plain_text().split(" ", 1)
     if len(actions) == 1:
@@ -308,7 +317,7 @@ async def _(
 
 @worker.handle()
 async def _(event: Event, state: T_State) -> None:
-    supported = isinstance(event, MessageEvent)
+    supported = isinstance(event, OneBot_V11_MessageEvent)
     if supported:
         state["add"] = _opt.add
         state["rm"] = _opt.rm
@@ -321,7 +330,7 @@ async def _(event: Event, state: T_State) -> None:
 
 
 @worker.got("group_id", prompt=MessageTemplate("{prompt}"))
-async def _(event: MessageEvent, state: T_State) -> None:
+async def _(event: OneBot_V11_MessageEvent, state: T_State) -> None:
     try:
         _input = str(state["group_id"])
         _group_id = _input.split(" ")
@@ -358,7 +367,7 @@ async def _(event: MessageEvent, state: T_State) -> None:
 @worker.got("services", prompt=MessageTemplate("{prompt}"))
 async def _(
     bot: Bot,
-    event: MessageEvent,
+    event: OneBot_V11_MessageEvent,
     state: T_State,
 ) -> None:
     try:
@@ -475,55 +484,71 @@ def isInService(service: Optional[str] = None, level: Optional[int] = None) -> R
             warning = True
         available.append(service)
 
-    async def _isInService(bot: Bot, event: Event) -> bool:
-        if isinstance(event, MessageEvent):
-            if isinstance(event, GroupMessageEvent):
-                if service and _opt.policy == 0:
-                    return _amc.check_universal(
-                        bot, getattr(event, "group_id"), service
-                    )
-                elif level and _opt.policy == 1:
-                    return (
-                        _amc.check_universal(bot, getattr(event, "group_id")) >= level
-                    )
-            else:
-                return True
-        elif isinstance(event, NoticeEvent):
-            if isinstance(event, FriendAddNoticeEvent) or isinstance(
-                event, FriendRecallNoticeEvent
-            ):
-                return True
-            elif service and _opt.policy == 0:
-                return (
-                    _amc.check_universal(bot, getattr(event, "group_id"), service)
-                    if getattr(event, "group_id")
-                    else False
-                )
-            elif level and _opt.policy == 1:
-                return (
-                    _amc.check_universal(bot, getattr(event, "group_id")) >= level
-                    if getattr(event, "group_id")
-                    else False
-                )
-        elif isinstance(event, RequestEvent):
-            if isinstance(event, FriendRequestEvent):
-                return True
-            elif service and _opt.policy == 0:
-                return (
-                    _amc.check_universal(bot, getattr(event, "group_id"), service)
-                    if getattr(event, "group_id")
-                    else False
-                )
-            elif level and _opt.policy == 1:
-                return (
-                    _amc.check_universal(bot, getattr(event, "group_id")) >= level
-                    if getattr(event, "group_id")
-                    else False
-                )
-        elif isinstance(event, MetaEvent):
-            return True
+    async def _check(bot: Bot, group_id: int) -> bool:
+        if service and _opt.policy == 0:
+            return _amc.check_universal(bot, group_id, service)
+        elif level and _opt.policy == 1:
+            return _amc.check_universal(bot, group_id) >= level
         else:
-            logger.warning("Not supported: RAM")
+            logger.warning(
+                "Failed while checking the service or level.",
+                "Please check the configuration.",
+            )
+            return True
+
+    async def _isInService(bot: Bot, event: Event) -> bool:
+        if bot.type == OneBot_V11_Adapter.get_name():
+            if isinstance(event, OneBot_V11_PrivateMessageEvent):
+                return True
+            elif isinstance(event, OneBot_V11_GroupMessageEvent):
+                group_id = event.group_id
+                return await _check(bot, group_id)
+            elif isinstance(event, OneBot_V11_GroupUploadNoticeEvent):
+                group_id = event.group_id
+                return await _check(bot, group_id)
+            elif isinstance(event, OneBot_V11_GroupAdminNoticeEvent):
+                group_id = event.group_id
+                return await _check(bot, group_id)
+            elif isinstance(event, OneBot_V11_GroupDecreaseNoticeEvent):
+                group_id = event.group_id
+                return await _check(bot, group_id)
+            elif isinstance(event, OneBot_V11_GroupIncreaseNoticeEvent):
+                group_id = event.group_id
+                return await _check(bot, group_id)
+            elif isinstance(event, OneBot_V11_GroupBanNoticeEvent):
+                group_id = event.group_id
+                return await _check(bot, group_id)
+            elif isinstance(event, OneBot_V11_FriendAddNoticeEvent):
+                return True
+            elif isinstance(event, OneBot_V11_GroupRecallNoticeEvent):
+                group_id = event.group_id
+                return await _check(bot, group_id)
+            elif isinstance(event, OneBot_V11_FriendRecallNoticeEvent):
+                return True
+            elif isinstance(event, OneBot_V11_PokeNotifyEvent):
+                group_id = event.group_id
+                return await _check(bot, group_id)
+            elif isinstance(event, OneBot_V11_LuckyKingNotifyEvent):
+                group_id = event.group_id
+                return await _check(bot, group_id)
+            elif isinstance(event, OneBot_V11_HonorNotifyEvent):
+                group_id = event.group_id
+                return await _check(bot, group_id)
+            elif isinstance(event, OneBot_V11_FriendRequestEvent):
+                return True
+            elif isinstance(event, OneBot_V11_GroupRequestEvent):
+                group_id = event.group_id
+                return await _check(bot, group_id)
+            elif isinstance(event, OneBot_V11_LifecycleMetaEvent):
+                return True
+            elif isinstance(event, OneBot_V11_HeartbeatMetaEvent):
+                return True
+
+            else:
+                logger.warning(f"Unsupported event to RAM: {event.get_event_name()}")
+                return True
+        else:
+            logger.warning(f"Unsupported adapter to RAM: {bot.type}")
             return True
 
     return Rule(_isInService)
