@@ -3,7 +3,7 @@ name = "nonebot_plugin_rauthman"
 version = "2.0.0-beta.2.post2"
 description = "Rule-based authorization manager worked with nonebot2"
 authors = ["Lancercmd <lancercmd@gmail.com>"]
-license = "GPLv3"
+license = "GPL-3.0-or-later"
 readme = "README.rst"
 repository = "https://github.com/Lancercmd/nonebot_plugin_rauthman"
 
