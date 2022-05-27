@@ -21,6 +21,7 @@ Highlights
 .. code:: python
 
  # MatcherGroup
+
  from nonebot.plugin import MatcherGroup
 
  from nonebot_plugin_rauthman import isInService
@@ -39,6 +40,7 @@ Highlights
 .. code:: python
 
  # Matcher
+
  from nonebot.plugin import on_command
 
  from nonebot_plugin_rauthman import isInService
@@ -46,6 +48,18 @@ Highlights
  worker = on_command(
      "test", rule=isInService("module_name_A", 10) & isInService("module_name_B", 10)
  )  # 同时满足多个 Rule 才可触发
+
+ ...
+.. code:: python
+
+ # Matcher
+
+ from nonebot_plugin_rauthman import isInService
+ from nonebot_plugin_translator import translator
+
+ translator.rule.checkers.add(
+     isInService("translator", 10)
+ )  # 为具名的 Matcher 附加 RuleChecker
 
  ...
 

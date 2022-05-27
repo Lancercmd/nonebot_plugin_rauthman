@@ -10,6 +10,7 @@
 - 为 Matcher 或 MatcherGroup 配置一条或多条 Rule 来实现功能的授权管理
 ```python
 # MatcherGroup
+
 from nonebot.plugin import MatcherGroup
 
 from nonebot_plugin_rauthman import isInService
@@ -23,9 +24,12 @@ worker_3 = workers.on_regex(...)
 worker_4 = workers.on_regex(...)
 worker_5 = workers.on_regex(...)
 worker_6 = workers.on_regex(...)
+
+...
 ```
 ```python
 # Matcher
+
 from nonebot.plugin import on_command
 
 from nonebot_plugin_rauthman import isInService
@@ -33,6 +37,20 @@ from nonebot_plugin_rauthman import isInService
 worker = on_command(
     "test", rule=isInService("module_name_A", 10) & isInService("module_name_B", 10)
 )  # 同时满足多个 Rule 才可触发
+
+...
+```
+```python
+# Matcher
+
+from nonebot_plugin_rauthman import isInService
+from nonebot_plugin_translator import translator
+
+translator.rule.checkers.add(
+    isInService("translator", 10)
+)  # 为具名的 Matcher 附加 RuleChecker
+
+...
 ```
 - 授权策略可选 `根据可用功能` 或 `根据服务级别`
 - 参数可完全自定义
