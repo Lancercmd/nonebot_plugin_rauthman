@@ -143,7 +143,7 @@ Highlights
   from nonebot.plugin import on_command
   from nonebot_plugin_rauthman import isInService
 
-  command = on_command('cmd', rule=isInService('module_name', 1))
+  command = on_command("cmd", rule=isInService("module_name", 1))
 
 | 这样，群聊必须被启用了该功能，或功能级别高于 ``1`` 才会进入事件处理（取决于当前应用的授权管理应用策略）
 
@@ -166,7 +166,7 @@ Highlights
  from nonebot.plugin import on_notice
  from nonebot_plugin_rauthman import isInService
 
- notice = on_notice(rule=to_me() & isInService('戳一戳', 1))
+ notice = on_notice(rule=to_me() & isInService("戳一戳", 1))
 
 | 使用过程 `预览图 <BotTest1.jpg>`_
 

@@ -5,7 +5,7 @@
 > 
 > 正在使用的 PyPI 发行版来源也应择日改为使用本 Git 来源。
 
-基于 [NoneBot2](https://github.com/nonebot/nonebot2)
+基于 [NoneBot2](https://github.com/nonebot/nonebot2)。
 ## Highlights
 - 为 Matcher 或 MatcherGroup 配置一条或多条 Rule 来实现功能的授权管理
 ```python
@@ -110,7 +110,7 @@ ram_available = -v  # 展示全局可用功能（根据可用功能），默认�
 from nonebot.plugin import on_command
 from nonebot_plugin_rauthman import isInService
 
-command = on_command('cmd', rule=isInService('module_name', 1))
+command = on_command("cmd", rule=isInService("module_name", 1))
 ```
 这样，群聊必须被启用了该功能，或功能级别高于 `1` 才会进入事件处理（取决于当前应用的授权管理应用策略）
 ## 小白案例
@@ -127,7 +127,7 @@ ram_available = 全局查询  # 展示全局可用功能（根据可用功能）
 from nonebot.plugin import on_notice
 from nonebot_plugin_rauthman import isInService
 
-notice = on_notice(rule=to_me() & isInService('戳一戳', 1))
+notice = on_notice(rule=to_me() & isInService("戳一戳", 1))
 ```
 ![1626748739905](BotTest1.jpg)
 ## 常见问题
