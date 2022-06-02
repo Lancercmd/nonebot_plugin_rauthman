@@ -2,14 +2,14 @@
 Author       : Lancercmd
 Date         : 2021-12-17 09:45:45
 LastEditors  : Lancercmd
-LastEditTime : 2022-05-25 12:10:23
+LastEditTime : 2022-06-02 20:10:49
 Description  : None
 GitHub       : https://github.com/Lancercmd
 """
 from __future__ import annotations
 
 from copy import deepcopy
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, fields
 from functools import wraps
 from os.path import join
 from pathlib import Path
@@ -50,7 +50,20 @@ from nonebot.typing import T_State
 from ._FileStation import FileStation
 from ._permission import onFocus
 
-config = get_driver().config
+_config = get_driver().config
+
+
+class Config:
+    savedata: str = getattr(_config, "savedata", "") or ""
+    ram_policy: int = getattr(_config, "ram_policy", 0) or 0
+    ram_cmd: str = getattr(_config, "ram_cmd", "ram") or "ram"
+    ram_add: str = getattr(_config, "ram_add", "-a") or "-a"
+    ram_rm: str = getattr(_config, "ram_rm", "-r") or "-r"
+    ram_show: str = getattr(_config, "ram_show", "-s") or "-s"
+    ram_available: str = getattr(_config, "ram_available", "-v") or "-v"
+
+
+config = Config()
 
 
 def generate_savedata_path(
@@ -68,7 +81,7 @@ def generate_savedata_path(
     -     bot: Bot  当前 Bot 实例，优先于 type 默认为 None
     -     type: str  指定 adapter 类型，默认为 None
     """
-    _path = join(sys_path[0], getattr(config, "savedata", "") or "")
+    _path = join(sys_path[0], config.savedata)
     if _bot:
         _path = join(_path, _bot.type)
     elif _type:
@@ -117,12 +130,12 @@ class Options:
 
     filepath: str = join(generate_savedata_path(), "global.json")
     permission: Permission = SUPERUSER
-    policy: int = getattr(config, "ram_policy", 0) or 0
-    cmd: str = getattr(config, "ram_cmd", "ram") or "ram"
-    add: str = getattr(config, "ram_add", "-a") or "-a"
-    rm: str = getattr(config, "ram_rm", "-r") or "-r"
-    show: str = getattr(config, "ram_show", "-s") or "-s"
-    available: str = getattr(config, "ram_available", "-v") or "-v"
+    policy: int = config.ram_policy
+    cmd: str = config.ram_cmd
+    add: str = config.ram_add
+    rm: str = config.ram_rm
+    show: str = config.ram_show
+    available: str = config.ram_available
 
 
 _opt = Options()
@@ -144,13 +157,19 @@ class RAM_Control(FileStation):
     def standardize(self) -> None:
         if not self.check_keys():
             if not self._get("RAM"):
+                logger.opt(colors=True).warning(
+                    "<lc>RAM</lc> data not exist. Try converting from legacy <lc>RAM</lc> data automatically."
+                )
                 self.convert_from_legacy()
             self.vacuum()
-        for key in RAM().__dataclass_fields__.keys():
-            setattr(self, key, self.get(key))
+            logger.opt(colors=True).info("<lc>RAM</lc> data is probably initialized.")
+        else:
+            logger.opt(colors=True).success("<lc>RAM</lc> <g>data is healthy.</g>")
+        for f in fields(RAM):
+            setattr(self, f.name, self.get(f.name))
 
     def check_keys(self) -> bool:
-        return self.keys() == RAM().__dataclass_fields__.keys()
+        return sorted(list(self.keys())) == sorted([f.name for f in fields(RAM)])
 
     def vacuum(self) -> None:
         _base = RAM()
@@ -182,9 +201,14 @@ class RAM_Control(FileStation):
         _path = Path(generate_savedata_path()) / "auth.json"
         _fs = FileStation(_path)
         if list(_fs._keys()) == list(RAM().cqhttp.keys()):
+            logger.opt(colors=True).info("Converting from legacy <lc>RAM</lc> data.")
             _base = RAM()
             _base.cqhttp = _fs._data
             self.data = _base.__dict__
+        else:
+            logger.opt(colors=True).warning(
+                "<ly>Legacy <lc>RAM</lc> data seems not in vanilla format, skip converting.</ly>"
+            )
 
     _compatible_adapters = {OneBot_V11_Adapter.get_name(): "onebot_v11"}
 

@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nonebot_plugin_rauthman"
-version = "2.0.0-beta.2.post2"
+version = "2.0.0-beta.2.post4"
 description = "Rule-based authorization manager worked with nonebot2"
 authors = ["Lancercmd <lancercmd@gmail.com>"]
 license = "GPL-3.0-or-later"
