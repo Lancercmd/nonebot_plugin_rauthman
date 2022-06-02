@@ -68,29 +68,14 @@ Highlights
 
 .. code:: python
 
- @dataclass
- class Options:
-     """
-     ###   RAM - 配置项
-     ###   参数
-     -     cmd: str  指令名，或者叫触发词
-     -     policy: int  授权策略，可选值如下：
-         -     0  根据可用功能
-         -     1  根据服务级别
-
-     ###   参数 - 根据可用功能
-     -     add: str  启用功能
-     -     rm: str  禁用功能
-     -     show: str  展示群功能状态
-     -     available: str  展示全局可用功能
-     """
-     permission: Permission = SUPERUSER
-     policy: int = getattr(config, "ram_policy", 0) or 0
-     cmd: str = getattr(config, "ram_cmd", "ram") or "ram"
-     add: str = getattr(config, "ram_add", "-a") or "-a"
-     rm: str = getattr(config, "ram_rm", "-r") or "-r"
-     show: str = getattr(config, "ram_show", "-s") or "-s"
-     available: str = getattr(config, "ram_available", "-v") or "-v"
+ class Config:
+     savedata: str = getattr(_config, "savedata", "") or ""
+     ram_policy: int = getattr(_config, "ram_policy", 0) or 0
+     ram_cmd: str = getattr(_config, "ram_cmd", "ram") or "ram"
+     ram_add: str = getattr(_config, "ram_add", "-a") or "-a"
+     ram_rm: str = getattr(_config, "ram_rm", "-r") or "-r"
+     ram_show: str = getattr(_config, "ram_show", "-s") or "-s"
+     ram_available: str = getattr(_config, "ram_available", "-v") or "-v"
 
 ******************************************************************************
 开始使用
@@ -193,7 +178,7 @@ Highlights
      授权修改操作与当前授权策略无关
 
 * 如果我希望在一个群中，管理员和群主可以修改开关/设置群 Level 我该怎么办？
-   | 对源代码第 ``110`` 行进行修改
+   | 对源代码第 ``132`` 行进行修改
 
 .. code:: python
 
