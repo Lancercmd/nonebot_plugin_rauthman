@@ -31,4 +31,5 @@ jobs:
 
       - name: Run tests
         run: |
+          $env:loguru_colorize=1
           poetry run python __init__.py

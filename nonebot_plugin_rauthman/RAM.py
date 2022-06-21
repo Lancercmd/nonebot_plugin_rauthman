@@ -2,7 +2,7 @@
 Author       : Lancercmd
 Date         : 2021-12-17 09:45:45
 LastEditors  : Lancercmd
-LastEditTime : 2022-06-02 20:10:49
+LastEditTime : 2022-06-21 13:04:57
 Description  : None
 GitHub       : https://github.com/Lancercmd
 """
@@ -43,7 +43,7 @@ from nonebot.adapters.onebot.v11 import (
 from nonebot.exception import ActionFailed
 from nonebot.params import CommandArg
 from nonebot.permission import SUPERUSER, Permission
-from nonebot.plugin import on_command
+from nonebot.plugin import on_command, PluginMetadata
 from nonebot.rule import Rule
 from nonebot.typing import T_State
 
@@ -576,3 +576,11 @@ def isInService(service: Optional[str] = None, level: Optional[int] = None) -> R
             return True
 
     return Rule(_isInService)
+
+
+__plugin_meta__ = PluginMetadata(
+    name="RAM - 基于规则的授权管理",
+    description="为 Matcher 配置一条或多条 Rule 来实现功能的授权管理",
+    usage=f"{config.ram_cmd} [{config.ram_add} <service>] [{config.ram_rm} <service>] [{config.ram_show}] [{config.ram_available}] [\d+]",
+    extra={"author": "Lancercmd"},
+)
