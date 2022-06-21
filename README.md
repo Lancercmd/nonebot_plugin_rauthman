@@ -1,4 +1,5 @@
 # RAM - 基于规则的授权管理器
+[![OSCS-small](https://www.oscs1024.com/platform/badge/Lancercmd/nonebot_plugin_rauthman.svg?size=small)](https://www.oscs1024.com/project/Lancercmd/nonebot_plugin_rauthman?ref=badge_small)
 ## 前言
 本项目将对 PyPI 上的发行版 [nonebot-plugin-rauthman](https://pypi.org/project/nonebot-plugin-rauthman/) 来源进行 deprecate 的处理。
 > 由于本模块的性质，未来即使提交更新也仅对本仓库进行。
