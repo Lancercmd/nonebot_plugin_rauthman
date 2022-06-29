@@ -2,17 +2,20 @@
 Author       : Lancercmd
 Date         : 2021-12-07 15:34:10
 LastEditors  : Lancercmd
-LastEditTime : 2022-01-05 22:11:54
+LastEditTime : 2022-06-29 21:05:31
 Description  : None
 GitHub       : https://github.com/Lancercmd
 """
 from __future__ import annotations
 
+from copy import deepcopy
 from datetime import datetime
 from os import makedirs, remove, rename
 from os.path import exists
 from pathlib import Path
+from re import sub
 from sys import getsizeof
+from tempfile import mkdtemp
 from typing import Any, Iterator
 
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
@@ -63,6 +66,11 @@ class FileStation:
     -     这是 FileStation 对象的默认定时任务调度器。
     -     目前没什么用处，除非你知道你在做什么，否则不要修改或使用这个属性。
     """
+    _tempdir: Path = Path(mkdtemp())
+    """
+    ###   FileStation - 临时文件目录
+    -     这是 FileStation 提供的一个临时文件目录，用于存放临时文件。
+    """
 
     async def save_job(*args) -> None:
         """
@@ -77,7 +85,9 @@ class FileStation:
                 f"<y>FileStation</y> is now saving {_len} files."
             )
             while _len:
-                success = FileStation(list(FileStation.save_queue)[0]).do_save()
+                success = FileStation(
+                    list(FileStation.save_queue)[0], unsafe=True
+                ).do_save()
                 if success:
                     # logger.success(f"Saved {list(FileStation.save_queue)[0]}")
                     FileStation.save_queue.remove(list(FileStation.save_queue)[0])
@@ -108,6 +118,7 @@ class FileStation:
         json_string: Optional[str] = None,
         use_superfetch: bool = False,
         scheduler: BaseScheduler = None,
+        unsafe: bool = False,
     ) -> None:
         """
         ###   FileStation - 构造函数
@@ -118,9 +129,10 @@ class FileStation:
             -     如果提供了 filepath 参数，就从文件中加载数据来初始化 FileStation 对象。
             -     如果 filepath 参数为 None 或者文件不存在，就创建一个空的 FileStation 对象。
             -     虽然 filepath 可以为 None，但是可能会导致一些问题，比如多次构造了空的 FileStation 对象，这样会导致数据丢失，因此生产环境中不要这么做。
-            -     如果 `use_superfetch` 参数为 True，就将 FileStation 对象写入 Superfetch 中。
+            -     如果 filepath 不存在于 Superfech，将 FileStation 对象写入 Superfetch 中。
             -     如果提供了 `module_name` 参数，就在初始化 FileStation 对象时，自动将对应模块的数据填充到 self.data 中。
-            -     否则，将所有数据即 `self._data` 填充到 self.data 中。
+            -     如果将 `_unsafe` 参数设置为 True，将使用旧方法来提取数据，即把 self.data 创建为 `self._data` 的引用。
+            -     否则，将所有数据即 `self._data` 深拷贝到 self.data 中。
         -     另外，如果提供了 scheduler 参数，就使用该参数指定的调度器来触发文件写入任务。
         -     否则，使用默认的 AsyncIOScheduler 调度器。
 
@@ -138,6 +150,7 @@ class FileStation:
         self._module_name = module_name
         self._json_string = json_string
         self._use_superfetch = use_superfetch
+        self._unsafe = unsafe
         self.load()
         if scheduler:
             logger.warning(
@@ -153,9 +166,10 @@ class FileStation:
         -     如果提供了 filepath 参数，就从文件中加载数据来初始化 FileStation 对象。
         -     如果 filepath 参数为 None 或者文件不存在，就创建一个空的 FileStation 对象。
         -     虽然 filepath 可以为 None，但是可能会导致一些问题，比如多次构造了空的 FileStation 对象，这样会导致数据丢失，因此生产环境中不要这么做。
-        -     如果 `use_superfetch` 参数为 True，就将 FileStation 对象写入 Superfetch 中。
+        -     如果 filepath 不存在于 Superfech，将 FileStation 对象写入 Superfetch 中。
         -     如果提供了 `module_name` 参数，就在初始化 FileStation 对象时，自动将对应模块的数据填充到 self.data 中。
-        -     否则，将所有数据即 `self._data` 填充到 self.data 中。
+        -     如果将 `_unsafe` 参数设置为 True，将使用旧方法来提取数据，即把 self.data 创建为 `self._data` 的引用。
+        -     否则，将所有数据即 `self._data` 深拷贝到 self.data 中。
         -     最后返回 self.data
         """
         self._data = {}
@@ -175,21 +189,24 @@ class FileStation:
     def _do_superfetch(self) -> None:
         """
         ###   FileStation - 写入 Superfetch
-        -     如果 `use_superfetch` 参数为 True，就将 FileStation 对象写入 Superfetch 中。
+        -     如果 filepath 不存在于 Superfech，将 FileStation 对象写入 Superfetch 中。
         """
-        if self._use_superfetch:
+        if not self._filepath in FileStation.superfetch:
             FileStation.superfetch[self._filepath] = self._data
 
     def _extract_data(self) -> None:
         """
         ###   FileStation - 提取数据
         -     如果提供了 `module_name` 参数，就在初始化 FileStation 对象时，自动将对应模块的数据填充到 self.data 中。
-        -     否则，将所有数据即 `self._data` 填充到 self.data 中。
+        -     如果将 `_unsafe` 参数设置为 True，将使用旧方法来提取数据，即把 self.data 创建为 `self._data` 的引用。
+        -     否则，将所有数据即 `self._data` 深拷贝到 self.data 中。
         """
         if self._module_name:
             self.data = self._data.get(self._module_name, {})
-        else:
+        elif self._unsafe:
             self.data = self._data
+        else:
+            self.data = deepcopy(self._data)
 
     def _load_from_superfetch(self) -> None:
         """
@@ -231,7 +248,7 @@ class FileStation:
         ###   FileStation - 保存数据
         -     仅提供了 filepath 参数时可用。
         -     当 snapshot 参数为 True 时，如果原文件存在，则会先用时间戳来重命名原文件。
-        -     当 `use_superfetch` 参数为 True 时，将文件写入任务添加到等待队列中，由 AsyncIOScheduler 按顺序执行。
+        -     当 `use_superfetch` 参数为 True 或 filepath 存在于 Superfetch 时，将文件写入任务添加到等待队列中，由 AsyncIOScheduler 按顺序执行。
         -     当 `use_superfetch` 属性设置为 False 时，立即将文件写入磁盘，不会添加到等待队列中。
         """
         if self._filepath:
@@ -240,7 +257,7 @@ class FileStation:
                 if exists(self._filepath):
                     now = datetime.now().strftime(r"%Y%m%d-%H%M%S-%f")[:-3]
                     rename(self._filepath, f"{self._filepath[:-5]}-{now}.json")
-            if self._use_superfetch:
+            if self._use_superfetch or self._filepath in FileStation.superfetch:
                 FileStation.save_queue.add(self._filepath)
                 return True
             else:
@@ -269,8 +286,7 @@ class FileStation:
         -     当目录结构不完整时，创建目录结构。
         """
         _path = Path(self._filepath).parent
-        if not _path.exists():
-            makedirs(_path.resolve(), exist_ok=True)
+        _path.mkdir(parents=True, exist_ok=True)
 
     def do_save(self) -> bool:
         """
@@ -626,6 +642,24 @@ class FileStation:
         """
         FileStation.scheduler.shutdown()
 
+    @staticmethod
+    def gettempdir(name: str = None) -> Path:
+        """
+        ###   FileStation - 获取临时目录
+        -     获取临时目录。
+        -     当提供 name 参数时，在临时目录下创建 name 目录并返回该目录，否则返回主目录。
+
+        ###   参数
+        -     name: str  子目录名称，默认为 None，即获取主目录。
+        """
+        _path = FileStation._tempdir
+        if name:
+            name = sub(r"[\\\/\:\*\?\"\<\>\|]", "", name)
+        if name:
+            _path = _path / name
+        _path.mkdir(parents=True, exist_ok=True)
+        return _path
+
 
 if __name__ == "__main__":
     """
@@ -792,7 +826,7 @@ if __name__ == "__main__":
 
     test_all()
 else:
-    from nonebot import get_asgi, require
+    from nonebot import get_driver, require
 
     FileStation.scheduler = require("nonebot_plugin_apscheduler").scheduler
     FileStation.scheduler.add_job(
@@ -803,9 +837,9 @@ else:
         id="FileStation.save_job",
     )
 
-    app = get_asgi()
+    driver = get_driver()
 
-    @app.on_event("shutdown")
+    @driver.on_shutdown
     async def clear_queue() -> None:
         FileStation.shutdown()
         _len = len(FileStation.save_queue)
@@ -814,7 +848,9 @@ else:
                 f"<y>FileStation.save_queue</y> is not empty, waiting for {_len} files to be saved"
             )
             while _len:
-                success = FileStation(list(FileStation.save_queue)[0]).do_save()
+                success = FileStation(
+                    list(FileStation.save_queue)[0], unsafe=True
+                ).do_save()
                 if success:
                     # logger.success(f"Saved {list(FileStation.save_queue)[0]}")
                     FileStation.save_queue.remove(list(FileStation.save_queue)[0])

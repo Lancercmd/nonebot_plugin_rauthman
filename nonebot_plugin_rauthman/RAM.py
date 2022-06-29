@@ -2,7 +2,7 @@
 Author       : Lancercmd
 Date         : 2021-12-17 09:45:45
 LastEditors  : Lancercmd
-LastEditTime : 2022-06-21 13:04:57
+LastEditTime : 2022-06-29 21:12:32
 Description  : None
 GitHub       : https://github.com/Lancercmd
 """
@@ -349,7 +349,7 @@ async def _(event: Event, state: T_State) -> None:
         state["available"] = _opt.available
         state["prompt"] = "请输入需要操作的群号，并用空格隔开~"
     else:
-        logger.warning("Not supported: RAM")
+        logger.warning(f"Unsupported event to RAM: {event.get_event_name()}")
         return
 
 
