@@ -2,13 +2,12 @@
 Author       : Lancercmd
 Date         : 2021-12-07 15:34:10
 LastEditors  : Lancercmd
-LastEditTime : 2022-06-29 21:05:31
+LastEditTime : 2022-07-07 19:36:07
 Description  : None
 GitHub       : https://github.com/Lancercmd
 """
 from __future__ import annotations
 
-from copy import deepcopy
 from datetime import datetime
 from os import makedirs, remove, rename
 from os.path import exists
@@ -131,8 +130,8 @@ class FileStation:
             -     虽然 filepath 可以为 None，但是可能会导致一些问题，比如多次构造了空的 FileStation 对象，这样会导致数据丢失，因此生产环境中不要这么做。
             -     如果 filepath 不存在于 Superfech，将 FileStation 对象写入 Superfetch 中。
             -     如果提供了 `module_name` 参数，就在初始化 FileStation 对象时，自动将对应模块的数据填充到 self.data 中。
-            -     如果将 `_unsafe` 参数设置为 True，将使用旧方法来提取数据，即把 self.data 创建为 `self._data` 的引用。
-            -     否则，将所有数据即 `self._data` 深拷贝到 self.data 中。
+            -     如果将 unsafe 参数设置为 True，将使用旧方法来提取数据，即把 self.data 创建为 `self._data` 的引用。
+            -     否则，将所有数据即 `self._data` 变换填充到 self.data 中。
         -     另外，如果提供了 scheduler 参数，就使用该参数指定的调度器来触发文件写入任务。
         -     否则，使用默认的 AsyncIOScheduler 调度器。
 
@@ -168,8 +167,8 @@ class FileStation:
         -     虽然 filepath 可以为 None，但是可能会导致一些问题，比如多次构造了空的 FileStation 对象，这样会导致数据丢失，因此生产环境中不要这么做。
         -     如果 filepath 不存在于 Superfech，将 FileStation 对象写入 Superfetch 中。
         -     如果提供了 `module_name` 参数，就在初始化 FileStation 对象时，自动将对应模块的数据填充到 self.data 中。
-        -     如果将 `_unsafe` 参数设置为 True，将使用旧方法来提取数据，即把 self.data 创建为 `self._data` 的引用。
-        -     否则，将所有数据即 `self._data` 深拷贝到 self.data 中。
+        -     如果将 unsafe 参数设置为 True，将使用旧方法来提取数据，即把 self.data 创建为 `self._data` 的引用。
+        -     否则，将所有数据即 `self._data` 变换填充到 self.data 中。
         -     最后返回 self.data
         """
         self._data = {}
@@ -198,15 +197,15 @@ class FileStation:
         """
         ###   FileStation - 提取数据
         -     如果提供了 `module_name` 参数，就在初始化 FileStation 对象时，自动将对应模块的数据填充到 self.data 中。
-        -     如果将 `_unsafe` 参数设置为 True，将使用旧方法来提取数据，即把 self.data 创建为 `self._data` 的引用。
-        -     否则，将所有数据即 `self._data` 深拷贝到 self.data 中。
+        -     如果将 unsafe 参数设置为 True，将使用旧方法来提取数据，即把 self.data 创建为 `self._data` 的引用。
+        -     否则，将所有数据即 `self._data` 变换填充到 self.data 中。
         """
         if self._module_name:
             self.data = self._data.get(self._module_name, {})
         elif self._unsafe:
             self.data = self._data
         else:
-            self.data = deepcopy(self._data)
+            self.data = loadJsonS(dumpJsonS(self._data))
 
     def _load_from_superfetch(self) -> None:
         """
