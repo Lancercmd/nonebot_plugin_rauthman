@@ -2,7 +2,7 @@
 Author       : Lancercmd
 Date         : 2021-12-17 09:45:45
 LastEditors  : Lancercmd
-LastEditTime : 2022-06-29 21:12:32
+LastEditTime : 2022-07-14 21:52:38
 Description  : None
 GitHub       : https://github.com/Lancercmd
 """
@@ -93,7 +93,7 @@ def generate_savedata_path(
             _path = join(_path, "group", f"{id}.json")
         else:
             raise ValueError("UnknownFlag")
-    return _path
+    return str(Path(_path))
 
 
 @dataclass

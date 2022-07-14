@@ -2,7 +2,7 @@
 Author       : Lancercmd
 Date         : 2021-12-07 15:34:10
 LastEditors  : Lancercmd
-LastEditTime : 2022-07-07 19:36:07
+LastEditTime : 2022-07-14 21:52:38
 Description  : None
 GitHub       : https://github.com/Lancercmd
 """
@@ -144,8 +144,10 @@ class FileStation:
         """
         if isinstance(filepath, Path):
             self._filepath = filepath.resolve()
+        elif filepath is None:
+            self._filepath = None
         else:
-            self._filepath = filepath
+            self._filepath = Path(filepath).resolve()
         self._module_name = module_name
         self._json_string = json_string
         self._use_superfetch = use_superfetch
@@ -167,7 +169,7 @@ class FileStation:
         -     虽然 filepath 可以为 None，但是可能会导致一些问题，比如多次构造了空的 FileStation 对象，这样会导致数据丢失，因此生产环境中不要这么做。
         -     如果 filepath 不存在于 Superfech，将 FileStation 对象写入 Superfetch 中。
         -     如果提供了 `module_name` 参数，就在初始化 FileStation 对象时，自动将对应模块的数据填充到 self.data 中。
-        -     如果将 unsafe 参数设置为 True，将使用旧方法来提取数据，即把 self.data 创建为 `self._data` 的引用。
+        -     如果将 unsafe 参数设置为 True，将使用旧方法来提取数据，即直接把 self.data 创建为 `self._data` 的引用，以满足兼容性或性能用途。
         -     否则，将所有数据即 `self._data` 变换填充到 self.data 中。
         -     最后返回 self.data
         """
@@ -197,7 +199,7 @@ class FileStation:
         """
         ###   FileStation - 提取数据
         -     如果提供了 `module_name` 参数，就在初始化 FileStation 对象时，自动将对应模块的数据填充到 self.data 中。
-        -     如果将 unsafe 参数设置为 True，将使用旧方法来提取数据，即把 self.data 创建为 `self._data` 的引用。
+        -     如果将 unsafe 参数设置为 True，将使用旧方法来提取数据，即直接把 self.data 创建为 `self._data` 的引用，以满足兼容性或性能用途。
         -     否则，将所有数据即 `self._data` 变换填充到 self.data 中。
         """
         if self._module_name:
@@ -257,6 +259,7 @@ class FileStation:
                     now = datetime.now().strftime(r"%Y%m%d-%H%M%S-%f")[:-3]
                     rename(self._filepath, f"{self._filepath[:-5]}-{now}.json")
             if self._use_superfetch or self._filepath in FileStation.superfetch:
+                FileStation.superfetch[self._filepath] = self._data
                 FileStation.save_queue.add(self._filepath)
                 return True
             else:
