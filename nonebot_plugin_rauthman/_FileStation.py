@@ -2,7 +2,7 @@
 Author       : Lancercmd
 Date         : 2021-12-07 15:34:10
 LastEditors  : Lancercmd
-LastEditTime : 2022-07-14 21:52:38
+LastEditTime : 2022-07-26 04:34:29
 Description  : None
 GitHub       : https://github.com/Lancercmd
 """
@@ -257,7 +257,7 @@ class FileStation:
             if snapshot:
                 if exists(self._filepath):
                     now = datetime.now().strftime(r"%Y%m%d-%H%M%S-%f")[:-3]
-                    rename(self._filepath, f"{self._filepath[:-5]}-{now}.json")
+                    rename(self._filepath, f"{str(self._filepath)[:-5]}-{now}.json")
             if self._use_superfetch or self._filepath in FileStation.superfetch:
                 FileStation.superfetch[self._filepath] = self._data
                 FileStation.save_queue.add(self._filepath)
