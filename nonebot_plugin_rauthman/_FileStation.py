@@ -2,7 +2,7 @@
 Author       : Lancercmd
 Date         : 2021-12-07 15:34:10
 LastEditors  : Lancercmd
-LastEditTime : 2022-07-26 04:34:29
+LastEditTime : 2022-07-29 10:13:53
 Description  : None
 GitHub       : https://github.com/Lancercmd
 """
@@ -10,7 +10,6 @@ from __future__ import annotations
 
 from datetime import datetime
 from os import makedirs, remove, rename
-from os.path import exists
 from pathlib import Path
 from re import sub
 from sys import getsizeof
@@ -255,7 +254,7 @@ class FileStation:
         if self._filepath:
             self.sort()
             if snapshot:
-                if exists(self._filepath):
+                if Path(self._filepath).exists():
                     now = datetime.now().strftime(r"%Y%m%d-%H%M%S-%f")[:-3]
                     rename(self._filepath, f"{str(self._filepath)[:-5]}-{now}.json")
             if self._use_superfetch or self._filepath in FileStation.superfetch:
@@ -279,7 +278,7 @@ class FileStation:
         """
         if isinstance(dir, Path):
             dir.mkdir(parents=True, exist_ok=True)
-        elif not exists(dir):
+        elif not Path(dir).exists():
             makedirs(dir, exist_ok=True)
 
     def _check_dir(self) -> None:
