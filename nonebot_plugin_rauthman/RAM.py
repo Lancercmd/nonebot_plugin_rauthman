@@ -2,21 +2,17 @@
 Author       : Lancercmd
 Date         : 2021-12-17 09:45:45
 LastEditors  : Lancercmd
-LastEditTime : 2022-07-14 21:52:38
+LastEditTime : 2022-10-05 01:21:22
 Description  : None
 GitHub       : https://github.com/Lancercmd
 """
 from __future__ import annotations
 
-from copy import deepcopy
 from dataclasses import dataclass, field, fields
 from functools import wraps
-from os.path import join
 from pathlib import Path
-from sys import path as sys_path
 from typing import Optional, Union
 
-from loguru import logger
 from nonebot import get_driver
 from nonebot.adapters import Bot, Event, Message, MessageTemplate
 from nonebot.adapters.onebot.v11 import (
@@ -43,13 +39,16 @@ from nonebot.adapters.onebot.v11 import (
 from nonebot.exception import ActionFailed
 from nonebot.params import CommandArg
 from nonebot.permission import SUPERUSER, Permission
-from nonebot.plugin import on_command, PluginMetadata
+from nonebot.plugin import PluginMetadata, on_command
 from nonebot.rule import Rule
 from nonebot.typing import T_State
+from nonebot.utils import logger_wrapper
+from ujson import dumps as dumpJsonS
+from ujson import loads as loadJsonS
 
-from ._FileStation import FileStation
-from ._permission import onFocus
+from ._FileStation import FileStation, generate_savedata_path
 
+log = logger_wrapper(Path(__file__).stem)
 _config = get_driver().config
 
 
@@ -64,36 +63,6 @@ class Config:
 
 
 config = Config()
-
-
-def generate_savedata_path(
-    id: int = None, *, flag: int = 0, _bot: Bot = None, _type: str = None
-) -> str:
-    """
-    ###   说明
-    -     获取指定个人或群聊 QQ 号的存档路径
-
-    ###   参数
-    -     id: int  指定全局，个人或群聊的 QQ 号，默认为全局
-    -     flag: int  在个人或群聊间切换，默认为个人，可选值如下：
-        -     0  个人
-        -     1  群聊
-    -     bot: Bot  当前 Bot 实例，优先于 type 默认为 None
-    -     type: str  指定 adapter 类型，默认为 None
-    """
-    _path = join(sys_path[0], config.savedata)
-    if _bot:
-        _path = join(_path, _bot.type)
-    elif _type:
-        _path = join(_path, _type)
-    if id:
-        if flag == 0:
-            _path = join(_path, "private", f"{id}.json")
-        elif flag == 1:
-            _path = join(_path, "group", f"{id}.json")
-        else:
-            raise ValueError("UnknownFlag")
-    return str(Path(_path))
 
 
 @dataclass
@@ -128,7 +97,7 @@ class Options:
     -     available: str  展示全局可用功能
     """
 
-    filepath: str = join(generate_savedata_path(), "global.json")
+    filepath: str = Path(generate_savedata_path()) / "global.json"
     permission: Permission = SUPERUSER
     policy: int = config.ram_policy
     cmd: str = config.ram_cmd
@@ -150,21 +119,23 @@ class RAM_Control(FileStation):
         self.standardize()
         return self.data
 
-    def reload(self, **kwargs) -> None:
-        super().reload(**kwargs)
+    def reload(self, *, full: bool = False) -> None:
+        super().reload(full=full)
         self.standardize()
 
     def standardize(self) -> None:
         if not self.check_keys():
             if not self._get("RAM"):
-                logger.opt(colors=True).warning(
-                    "<lc>RAM</lc> data not exist. Try converting from legacy <lc>RAM</lc> data automatically."
+                log(
+                    "WARNING",
+                    "RAM data not exist. Try converting from legacy automatically.",
                 )
                 self.convert_from_legacy()
+                self.save(snapshot=True)
             self.vacuum()
-            logger.opt(colors=True).info("<lc>RAM</lc> data is probably initialized.")
+            log("SUCCESS", "Initialized: " + self._filepath.name)
         else:
-            logger.opt(colors=True).success("<lc>RAM</lc> <g>data is healthy.</g>")
+            log("SUCCESS", "<g>Healthy</g>: " + self._filepath.name)
         for f in fields(RAM):
             setattr(self, f.name, self.get(f.name))
 
@@ -201,16 +172,16 @@ class RAM_Control(FileStation):
         _path = Path(generate_savedata_path()) / "auth.json"
         _fs = FileStation(_path)
         if list(_fs._keys()) == list(RAM().cqhttp.keys()):
-            logger.opt(colors=True).info("Converting from legacy <lc>RAM</lc> data.")
+            log("INFO", "Converting from legacy...")
             _base = RAM()
             _base.cqhttp = _fs._data
             self.data = _base.__dict__
         else:
-            logger.opt(colors=True).warning(
-                "<ly>Legacy <lc>RAM</lc> data seems not in vanilla format, skip converting.</ly>"
-            )
+            log("WARNING", "Legacy data not vanilla, skip converting.")
 
-    _compatible_adapters = {OneBot_V11_Adapter.get_name(): "onebot_v11"}
+    _compatible_adapters = {
+        OneBot_V11_Adapter.get_name(): "onebot_v11",
+    }
 
     def _check_adapter(self, bot: Bot) -> bool:
         if bot.type in self._compatible_adapters:
@@ -232,7 +203,7 @@ class RAM_Control(FileStation):
                 _groups[f"{group_id}"] = {}
             _home = _groups[f"{group_id}"]
             if services:
-                cache = deepcopy(services)
+                cache = loadJsonS(dumpJsonS(services))
                 if not "enabled" in _home:
                     _home["enabled"] = []
                 if not "disabled" in _home:
@@ -307,14 +278,11 @@ _amc = RAM_Control()
 worker = on_command(_opt.cmd, permission=_opt.permission)
 
 
-@worker.permission_updater
-async def _(event: Event) -> Permission:
-    return await onFocus(event)
-
-
 @worker.handle()
 async def _(
-    event: OneBot_V11_GroupMessageEvent, state: T_State, args: Message = CommandArg()
+    event: OneBot_V11_GroupMessageEvent,
+    state: T_State,
+    args: Message = CommandArg(),
 ) -> None:
     state["group_id"] = str(event.group_id)
     _plain_text = args.extract_plain_text()
@@ -324,7 +292,9 @@ async def _(
 
 @worker.handle()
 async def _(
-    event: OneBot_V11_PrivateMessageEvent, state: T_State, args: Message = CommandArg()
+    event: OneBot_V11_MessageEvent,
+    state: T_State,
+    args: Message = CommandArg(),
 ) -> None:
     actions = args.extract_plain_text().split(" ", 1)
     if len(actions) == 1:
@@ -341,7 +311,9 @@ async def _(
 
 @worker.handle()
 async def _(event: Event, state: T_State) -> None:
+    # fmt: off
     supported = isinstance(event, OneBot_V11_MessageEvent)
+    # fmt: on
     if supported:
         state["add"] = _opt.add
         state["rm"] = _opt.rm
@@ -349,22 +321,19 @@ async def _(event: Event, state: T_State) -> None:
         state["available"] = _opt.available
         state["prompt"] = "请输入需要操作的群号，并用空格隔开~"
     else:
-        logger.warning(f"Unsupported event to RAM: {event.get_event_name()}")
+        log("WARNING", f"Unsupported event {event.get_event_name()}")
         return
 
 
 @worker.got("group_id", prompt=MessageTemplate("{prompt}"))
-async def _(event: OneBot_V11_MessageEvent, state: T_State) -> None:
+async def _(state: T_State) -> None:
     try:
         _input = str(state["group_id"])
         _group_id = _input.split(" ")
         group_ids = []
         for i in _group_id:
             if i.isdigit():
-                if not i in group_ids and i != "1":
-                    group_ids.append(int(i))
-                else:
-                    await worker.finish("请不要用此方式进行全局设置哦~")
+                group_ids.append(int(i))
             else:
                 await worker.finish("Invalid input")
         if group_ids:
@@ -372,8 +341,9 @@ async def _(event: OneBot_V11_MessageEvent, state: T_State) -> None:
         else:
             await worker.finish("Invalid input")
     except ActionFailed as e:
-        logger.warning(
-            f"ActionFailed {e.info['retcode']} {e.info['msg'].lower()} {e.info['wording']}"
+        log(
+            "WARNING",
+            f"ActionFailed {e.info['retcode']} {e.info['msg'].lower()} {e.info['wording']}",
         )
         return
     state["prompt"] = "\n".join(
@@ -406,10 +376,12 @@ async def _(
                     prev = _amc.check_universal(bot, group_id)
                     _amc.set_universal(bot, group_id, level=int(_services[0]))
                     if len(state["group_ids"]) == 1:
-                        segments.append(f"群 Level {prev} =>" + str(state["services"]))
+                        segments.append(
+                            f"群 Level {prev} => " + str(state["services"])
+                        )
                     else:
                         segments.append(
-                            f"群 {group_id} Level {prev} =>" + str(state["services"])
+                            f"群 {group_id} Level {prev} => " + str(state["services"])
                         )
                 await worker.finish("\n".join(segments))
             elif _services[0] == _opt.show:
@@ -478,10 +450,11 @@ async def _(
                 message.append(f"未找到：{' '.join(invalid)}")
             await worker.finish("\n".join(message))
         else:
-            logger.warning(f"Invalid input: {_services}")
+            log("WARNING", f"Invalid input: {_services}")
     except ActionFailed as e:
-        logger.warning(
-            f"ActionFailed {e.info['retcode']} {e.info['msg'].lower()} {e.info['wording']}"
+        log(
+            "WARNING",
+            f"ActionFailed {e.info['retcode']} {e.info['msg'].lower()} {e.info['wording']}",
         )
 
 
@@ -504,7 +477,7 @@ def isInService(service: Optional[str] = None, level: Optional[int] = None) -> R
     global warning
     if service and not service in available:
         if " " in service and not warning:
-            logger.warning("At least 1 space found in the service name")
+            log("WARNING", "At least 1 space found in the service name")
             warning = True
         available.append(service)
 
@@ -514,9 +487,9 @@ def isInService(service: Optional[str] = None, level: Optional[int] = None) -> R
         elif level and _opt.policy == 1:
             return _amc.check_universal(bot, group_id) >= level
         else:
-            logger.warning(
-                "Failed while checking the service or level.",
-                "Please check the configuration.",
+            log(
+                "WARNING",
+                "Failed while checking the service or level. Please check the configuration.",
             )
             return True
 
@@ -569,10 +542,10 @@ def isInService(service: Optional[str] = None, level: Optional[int] = None) -> R
                 return True
 
             else:
-                logger.warning(f"Unsupported event to RAM: {event.get_event_name()}")
+                log("WARNING", f"Unsupported event: {event.get_event_name()}")
                 return True
         else:
-            logger.warning(f"Unsupported adapter to RAM: {bot.type}")
+            log("WARNING", f"Unsupported adapter: {bot.type}")
             return True
 
     return Rule(_isInService)
