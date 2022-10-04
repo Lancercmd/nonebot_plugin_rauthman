@@ -203,15 +203,15 @@ nonebot2 = ">=2.0.0-beta.3,<3.0.0"
 
 [[package]]
 name = "nonebot-plugin-apscheduler"
-version = "0.1.4"
+version = "0.2.0"
 description = "APScheduler Support for NoneBot2"
 category = "main"
 optional = false
-python-versions = ">=3.7.3,<4.0.0"
+python-versions = ">=3.8,<4.0"
 
 [package.dependencies]
 apscheduler = ">=3.7.0,<4.0.0"
-nonebot2 = ">=2.0.0-alpha.8,<3.0.0"
+nonebot2 = ">=2.0.0-rc.1,<3.0.0"
 
 [[package]]
 name = "nonebot2"
@@ -562,7 +562,7 @@ multidict = ">=4.0"
 [metadata]
 lock-version = "1.1"
 python-versions = "^3.9"
-content-hash = "a20a3bab7571db3f1804082f3fa7accf9b99ceb08b6e5550aedefc692e8de3c8"
+content-hash = "4f0df0b110bae181756fd8f04c2648d8a91b6ada337598c67451e4a1eb853064"
 
 [metadata.files]
 anyio = [
@@ -785,8 +785,8 @@ nonebot-adapter-onebot = [
     {file = "nonebot_adapter_onebot-2.1.3-py3-none-any.whl", hash = "sha256:d44eb7b119fdcc3f7936c77e2c0922728c959ad6d6b36ebd004e94856d9ccf49"},
 ]
 nonebot-plugin-apscheduler = [
-    {file = "nonebot-plugin-apscheduler-0.1.4.tar.gz", hash = "sha256:7541cfb2af48f244b74b66fd14f6486ef39a6d79f17b15c31cf1c6ad9a9632ca"},
-    {file = "nonebot_plugin_apscheduler-0.1.4-py3-none-any.whl", hash = "sha256:c904c344c22c8fb2bafec9875ee195b7be7d1f0b758a04e96da6758d62cf4e83"},
+    {file = "nonebot-plugin-apscheduler-0.2.0.tar.gz", hash = "sha256:7b63e99a611b657533b48fcf1f8c6627c18c2eb3fa820a906cd4ec4666c0ceb0"},
+    {file = "nonebot_plugin_apscheduler-0.2.0-py3-none-any.whl", hash = "sha256:9285ee84ca1cfa4db73c86cedb5911bbbd25a21ec0cd5f22447cd12f89e48fb4"},
 ]
 nonebot2 = [
     {file = "nonebot2-2.0.0rc1-py3-none-any.whl", hash = "sha256:99c70300b9d0755bba6ed50b7399f44f6213e119157bc026b960b3e157a38416"},

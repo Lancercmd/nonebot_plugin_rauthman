@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "nonebot_plugin_rauthman"
-version = "2.0.0-beta.4.post3"
+version = "2.0.0-rc1"
 description = "Rule-based authorization manager worked with nonebot2"
 authors = ["Lancercmd <lancercmd@gmail.com>"]
 license = "GPL-3.0-or-later"
@@ -12,7 +12,7 @@ python = "^3.9"
 nonebot2 = "^2.0.0-beta.4"
 nonebot-adapter-onebot = "^2.0.0-beta.1"
 ujson = ">=4.0.2,<6.0.0"
-nonebot-plugin-apscheduler = "^0.1.2"
+nonebot-plugin-apscheduler = "^0.2.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^7.1.3"
