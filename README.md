@@ -131,7 +131,7 @@ notice = on_notice(rule=to_me() & isInService("戳一戳", 1))
   &nbsp;&nbsp;&nbsp;&nbsp;这样这个群的 Level 就被设定成 ``10`` 默认的 Level 为 ``0``
   > 授权修改操作与当前授权策略无关
 - ***如果我希望在一个群中，管理员和群主可以修改开关/设置群 Level 我该怎么办？***  
-  &nbsp;&nbsp;&nbsp;&nbsp;对源代码第 ``132`` 行进行修改
+  &nbsp;&nbsp;&nbsp;&nbsp;对源代码第 ``101`` 行进行修改
 ```python
 permission: Permission = SUPERUSER  # 参考 NoneBot2 文档 - 进阶 - 权限控制
 ```

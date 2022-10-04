@@ -2,7 +2,7 @@
 Author       : Lancercmd
 Date         : 2021-12-07 15:34:10
 LastEditors  : Lancercmd
-LastEditTime : 2022-07-29 10:13:53
+LastEditTime : 2022-08-29 16:11:57
 Description  : None
 GitHub       : https://github.com/Lancercmd
 """
@@ -19,17 +19,10 @@ from typing import Any, Iterator
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.schedulers.base import BaseScheduler
 from loguru import logger
-
-try:
-    from ujson import dump as dumpJson
-    from ujson import dumps as dumpJsonS
-    from ujson import load as loadJson
-    from ujson import loads as loadJsonS
-except ImportError:
-    from json import dump as dumpJson
-    from json import dumps as dumpJsonS
-    from json import load as loadJson
-    from json import loads as loadJsonS
+from ujson import dump as dumpJson
+from ujson import dumps as dumpJsonS
+from ujson import load as loadJson
+from ujson import loads as loadJsonS
 
 
 class FileStation:
@@ -343,6 +336,8 @@ class FileStation:
             try:
                 method(**kwargs)
             except AttributeError:
+                pass
+            except TypeError:
                 pass
 
     def sort_1(self, **kwargs) -> None:
@@ -827,7 +822,10 @@ if __name__ == "__main__":
 
     test_all()
 else:
+    from sys import path as sys_path
+
     from nonebot import get_driver, require
+    from nonebot.adapters import Bot
 
     FileStation.scheduler = require("nonebot_plugin_apscheduler").scheduler
     FileStation.scheduler.add_job(
@@ -873,3 +871,33 @@ else:
                 logger.warning(f"{len(FileStation.save_queue)} files not saved")
             else:
                 logger.success("All files saved")
+
+    def generate_savedata_path(
+        id: int = None, *, flag: int = 0, _bot: Bot = None, _type: str = None
+    ) -> str:
+        """
+        ###   说明
+        -     获取指定个人或群聊 QQ 号的存档路径
+
+        ###   参数
+        -     id: int  指定全局，个人或群聊的 QQ 号，默认为全局
+        -     flag: int  在个人或群聊间切换，默认为个人，可选值如下：
+            -     0  个人
+            -     1  群聊
+        -     bot: Bot  当前 Bot 实例，优先于 type 默认为 None
+        -     type: str  指定 adapter 类型，默认为 None
+        """
+        savedata = getattr(driver.config, "savedata", "")
+        _path = Path(sys_path[0]) / savedata
+        if _bot:
+            _path = _path / _bot.type
+        elif _type:
+            _path = _path / _type
+        if id:
+            if flag == 0:
+                _path = _path / "private" / f"{id}.json"
+            elif flag == 1:
+                _path = _path / "group" / f"{id}.json"
+            else:
+                raise ValueError("UnknownFlag")
+        return str(_path.resolve())
