@@ -1,11 +1,3 @@
-"""
-Author       : Lancercmd
-Date         : 2021-12-17 09:45:45
-LastEditors  : Lancercmd
-LastEditTime : 2022-10-05 01:21:22
-Description  : None
-GitHub       : https://github.com/Lancercmd
-"""
 from __future__ import annotations
 
 from dataclasses import dataclass, field, fields
@@ -376,9 +368,7 @@ async def _(
                     prev = _amc.check_universal(bot, group_id)
                     _amc.set_universal(bot, group_id, level=int(_services[0]))
                     if len(state["group_ids"]) == 1:
-                        segments.append(
-                            f"群 Level {prev} => " + str(state["services"])
-                        )
+                        segments.append(f"群 Level {prev} => " + str(state["services"]))
                     else:
                         segments.append(
                             f"群 {group_id} Level {prev} => " + str(state["services"])
@@ -555,5 +545,8 @@ __plugin_meta__ = PluginMetadata(
     name="RAM - 基于规则的授权管理",
     description="为 Matcher 配置一条或多条 Rule 来实现功能的授权管理",
     usage=f"{config.ram_cmd} [{config.ram_add} <service>] [{config.ram_rm} <service>] [{config.ram_show}] [{config.ram_available}] [\d+]",
+    homepage="https://github.com/Lancercmd/nonebot_plugin_rauthman",
+    type="application",
+    supported_adapters={"~onebot.v11"},
     extra={"author": "Lancercmd"},
 )

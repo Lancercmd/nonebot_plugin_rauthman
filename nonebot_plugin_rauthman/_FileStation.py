@@ -1,11 +1,3 @@
-"""
-Author       : Lancercmd
-Date         : 2021-12-07 15:34:10
-LastEditors  : Lancercmd
-LastEditTime : 2022-08-29 16:11:57
-Description  : None
-GitHub       : https://github.com/Lancercmd
-"""
 from __future__ import annotations
 
 from datetime import datetime
