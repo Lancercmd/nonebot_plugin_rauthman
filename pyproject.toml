@@ -16,7 +16,7 @@ nonebot-plugin-apscheduler = "^0.4.0"
 
 [tool.poetry.dev-dependencies]
 pytest = "^8.0.1"
-black = "^24.2.0"
+black = "^25.11.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
